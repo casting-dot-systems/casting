@@ -1,0 +1,27 @@
+[project]
+name = "cast-server"
+version = "0.1.0"
+description = "FastAPI server for Cast markdown file management and git operations"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.117.1",
+    "uvicorn>=0.36.0",
+    "python-dotenv>=1.1.1",
+    "aiohttp>=3.12.15",
+]
+
+[project.scripts]
+cast-server = "casting.apps.cast.server.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0"
+]
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "casting.apps.cast.server"
+namespace = true

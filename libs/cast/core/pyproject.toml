@@ -1,0 +1,22 @@
+[project]
+name = "cast-core"
+version = "0.1.2"
+description = "Core library for Cast Sync - parsing, normalization, digests"
+requires-python = ">=3.13"
+dependencies = [
+    "ruamel.yaml>=0.18.0",
+    "pydantic>=2.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0"
+]
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "casting.cast.core"
+namespace = true

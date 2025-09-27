@@ -2,7 +2,6 @@
 name = "casting-notion"
 version = "0.1.0"
 description = "Notion integration for casting systems"
-readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "httpx>=0.27",
@@ -15,8 +14,8 @@ dependencies = [
 notion = "casting.notion:Plugin"
 
 [build-system]
-requires = ["uv>=0.5.0"]
-build-backend = "uv"
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "casting.notion"
