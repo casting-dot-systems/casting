@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import asyncio
+from pathlib import Path
 from dotenv import load_dotenv
 
 from casting.apps.cast.discord.utils.api_client import APIClient
@@ -9,7 +10,10 @@ from casting.apps.cast.discord.utils.helpers import get_discord_config, is_autho
 from casting.apps.cast.discord.commands.git_commands import GitCommands
 from casting.apps.cast.discord.commands.markdown_commands import MarkdownCommands
 
-load_dotenv()
+# Load environment variables from the Discord app directory
+discord_app_dir = Path(__file__).parent.parent.parent.parent
+env_file = discord_app_dir / '.env'
+load_dotenv(env_file)
 
 class CastingBot(commands.Bot):
     def __init__(self):

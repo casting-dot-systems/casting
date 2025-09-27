@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from tests.framework import Sandbox, mk_note, write_file, read_file
+from .._support import Sandbox, mk_note, write_file, read_file
 
 
 def test_simple_first_contact_rename_still_works(tmp_path):

@@ -26,6 +26,13 @@ from rich.prompt import Prompt
 from rich.table import Table
 from ruamel.yaml import YAML
 
+from casting.cast.core.yamlio import (
+    parse_cast_file,
+    ensure_cast_fields,
+    reorder_cast_fields,
+    write_cast_file,
+)
+
 # Initialize
 app = typer.Typer(help="Cast Sync - Synchronize Markdown files across local casts")
 # codebase sub-app
@@ -548,6 +555,133 @@ def report():
 
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(2) from e
+
+
+@app.command()
+def index(
+    file: str | None = typer.Option(
+        None, "--file", "-f",
+        help="Normalize a single file (cast-id or path). Omit to process all Markdown under ./Cast."
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be updated without writing"),
+):
+    """
+    Normalize Cast front‑matter across Markdown files.
+
+    For each *.md in ./Cast:
+      • Add YAML front‑matter if missing.
+      • Ensure 'last-updated', 'cast-id', 'cast-version'.
+      • Reorder YAML to: last-updated, cast-id, (other cast-*), cast-version, then other fields.
+    Does not change the Markdown body. Safe & idempotent.
+    """
+    try:
+        root = get_current_root()
+        vault_path = root / "Cast"
+        if not vault_path.exists():
+            console.print(f"[red]Error: Cast folder not found at {vault_path}[/red]")
+            raise typer.Exit(2)
+
+        # Resolve working set
+        targets: list[Path] = []
+        if file:
+            p = Path(file).expanduser()
+            # absolute or cwd-relative path
+            if p.exists() and p.is_file():
+                targets = [p]
+            else:
+                # cast-relative path (strip 'Cast/' prefix if present)
+                rel = Path(file)
+                if rel.parts and rel.parts[0].lower() == "cast":
+                    rel = Path(*rel.parts[1:])
+                cand = vault_path / rel
+                if cand.exists() and cand.is_file():
+                    targets = [cand]
+                else:
+                    # search by cast-id (best effort)
+                    found = None
+                    for md in vault_path.rglob("*.md"):
+                        try:
+                            fm, _body, has = parse_cast_file(md)
+                            if has and isinstance(fm, dict) and str(fm.get("cast-id")) == file:
+                                found = md
+                                break
+                        except Exception:
+                            continue
+                    if not found:
+                        console.print(f"[red]No file matched[/red] '{file}' (path or cast-id).")
+                        raise typer.Exit(2)
+                    targets = [found]
+        else:
+            targets = list(vault_path.rglob("*.md"))
+
+        if not targets:
+            console.print("[yellow]No Markdown files found under ./Cast[/yellow]")
+            raise typer.Exit(0)
+
+        created = 0
+        ensured = 0
+        reordered = 0
+        written = 0
+        errors = 0
+
+        with cast_lock(root):
+            table = Table(show_header=True, header_style="bold")
+            table.add_column("File")
+            table.add_column("Actions")
+
+            for path in sorted(targets, key=lambda p: str(p).casefold()):
+                try:
+                    fm, body, has_cast_fields = parse_cast_file(path)
+                    actions: list[str] = []
+                    if fm is None:
+                        # No YAML at all → create minimal Cast FM
+                        fm = {}
+                        fm, _ = ensure_cast_fields(fm, generate_id=True)
+                        actions.append("create_fm+cast_id+version+last-updated")
+                        created += 1
+                    else:
+                        # Ensure required Cast fields exist
+                        fm2, changed = ensure_cast_fields(dict(fm), generate_id=True)
+                        if changed:
+                            actions.append("ensure_cast_fields")
+                            ensured += 1
+                        fm = fm2
+
+                    # Reorder/canonicalize
+                    before = dict(fm)
+                    after = reorder_cast_fields(fm)
+                    # Detect value/ordering changes worth writing (order changes don't affect ==)
+                    keys_changed = list(before.keys()) != list(after.keys())
+                    hsync_changed = (after.get("cast-hsync") != before.get("cast-hsync"))
+                    cbs_changed = (after.get("cast-codebases") != before.get("cast-codebases"))
+                    if keys_changed or hsync_changed or cbs_changed:
+                        actions.append("reorder")
+                        reordered += 1
+                    fm = after
+
+                    if actions:
+                        if not dry_run:
+                            write_cast_file(path, fm, body or "", reorder=False)
+                        written += 0 if dry_run else 1
+                        table.add_row(str(path.relative_to(vault_path)), ", ".join(actions))
+                except Exception as e:
+                    errors += 1
+                    table.add_row(str(path.relative_to(vault_path)), f"[red]error: {e}[/red]")
+
+        console.rule("[bold cyan]Index normalization[/bold cyan]")
+        console.print(table)
+        console.print(
+            f"\nSummary: "
+            f"created: [bold]{created}[/bold]   ensured: [bold]{ensured}[/bold]   "
+            f"reordered: [bold]{reordered}[/bold]   "
+            f"{'written' if not dry_run else 'would write'}: [bold]{written}[/bold]   "
+            f"errors: [bold]{errors}[/bold]"
+        )
+        raise typer.Exit(1 if errors else 0)
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(2) from e
 
 

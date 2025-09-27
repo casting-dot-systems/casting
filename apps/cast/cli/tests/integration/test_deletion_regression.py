@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from tests.framework import Sandbox, mk_note, write_file, read_file
+from .._support import Sandbox, mk_note, write_file, read_file
 
 
 def test_local_delete_with_other_file_does_not_undelete(tmp_path):

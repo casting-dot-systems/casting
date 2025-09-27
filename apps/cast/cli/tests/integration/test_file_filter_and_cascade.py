@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from tests.framework import Sandbox, mk_note, read_file, write_file
+from .._support import Sandbox, mk_note, read_file, write_file
 
 
 def test_file_filter_prevents_spurious_deletions(tmp_path):

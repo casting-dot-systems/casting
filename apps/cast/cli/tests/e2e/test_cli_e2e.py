@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 import pytest
-from cast_cli.cli import app
+from casting.apps.cast.cli.cli import app
 from typer.testing import CliRunner
 
 runner = CliRunner()

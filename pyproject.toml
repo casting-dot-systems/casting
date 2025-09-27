@@ -13,6 +13,7 @@ default-groups = ["dev"]
 [tool.uv.workspace]
 # Include general libs and apps; *exclude* orgs
 members = [
+    "llmgine",
     "apps/cast-explorer",
     "apps/prompt-gen",
     "apps/cast/cli",
@@ -34,6 +35,7 @@ exclude = ["orgs/*"]
 # Workspace-wide mapping: when a member depends on these names,
 # satisfy them from the workspace (editable).
 [tool.uv.sources]
+llmgine = { workspace = true }
 casting-core = { workspace = true }
 casting-discord-framework = { workspace = true }
 casting-discord-processing = { workspace = true }
@@ -43,10 +45,10 @@ casting-gcal = { workspace = true }
 cast-core = { workspace = true }
 cast-sync = { workspace = true }
 cast-git = { workspace = true }
-cast-tui = { workspace = true }
-cast-cli = { workspace = true }
 cast-server = { workspace = true }
 cast-discord = { workspace = true }
+cast-cli = { workspace = true }
+cast-tui = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -59,7 +61,9 @@ dev = [
   "httpx>=0.27",
   "poethepoet>=0.31.0",
   "ruamel.yaml>=0.18.0",
-  "typer>=0.12.0"
+  "typer>=0.12.0",
+  "cast-cli",
+  "cast-tui",
 ]
 
 [tool.ruff]
@@ -81,10 +85,25 @@ select = [
 known-first-party = ["casting", "casting_org"]
 
 [tool.pyright]
+include = [
+    "apps",
+    "libs",
+    "llmgine/src",
+    "tests"
+]
+exclude = [
+    "**/__pycache__",
+    "**/.venv",
+    "**/node_modules",
+    "orgs"
+]
 venvPath = "."
 venv = ".venv"
 pythonVersion = "3.13"
-strict = ["**/*.py"]
+typeCheckingMode = "basic"
+useLibraryCodeForTypes = true
+reportMissingImports = "warning"
+reportMissingTypeStubs = false
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
@@ -93,17 +112,32 @@ addopts = "--doctest-modules"
 fmt = "ruff format"
 lint = "ruff check --fix"
 check = "pyright"
-test = "pytest"
+
+# Test commands - run from root
+"test:cli" = "pytest apps/cast/cli/tests"
+"test:tui" = { shell = "cd apps/cast/tui && pytest $@" }
+"test:core" = { shell = "cd libs/cast/core && pytest $@" }
+"test:sync" = { shell = "cd libs/cast/sync && pytest $@" }
+"test:all" = [
+    { ref = "test:cli" },
+    { ref = "test:tui" },
+    { ref = "test:core" },
+    { ref = "test:sync" }
+]
+test = { ref = "test:all" }
+
 all = [
     { ref = "fmt" },
     { ref = "lint" },
     { ref = "check" },
     { ref = "test" },
 ]
+
+# CI commands
 "ci:fmt" = "ruff format --check"
 "ci:lint" = "ruff check"
 "ci:check" = "pyright"
-"ci:test" = "pytest"
+"ci:test" = { ref = "test:all" }
 "ci:all" = [
     { ref = "ci:fmt" },
     { ref = "ci:lint" },

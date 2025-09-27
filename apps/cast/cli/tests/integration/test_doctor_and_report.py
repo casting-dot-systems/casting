@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from tests.framework import Sandbox, mk_note, write_file
+from .._support import Sandbox, mk_note, write_file
 
 
 def test_doctor_and_report(tmp_path):

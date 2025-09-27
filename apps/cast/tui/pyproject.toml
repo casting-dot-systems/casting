@@ -20,3 +20,6 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "casting.apps.cast.tui"
 namespace = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

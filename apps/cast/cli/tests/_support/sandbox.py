@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import ruamel.yaml
-from cast_cli.cli import app
+from casting.apps.cast.cli.cli import app
 from typer.testing import CliRunner
 
 from .files import read_file, write_file  # re-exported in __init__

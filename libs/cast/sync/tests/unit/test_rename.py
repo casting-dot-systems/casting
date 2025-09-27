@@ -1,13 +1,8 @@
 """Test rename functionality in hsync."""
 
-import sys
 import tempfile
 from pathlib import Path
-
-# Add the cast-sync module path
-sys.path.insert(0, str(Path(__file__).parent.parent / "libs" / "cast-sync"))
-
-from casting.cast.sync.hsync import SyncDecision
+from casting.cast.sync.hsync import SyncDecision, HorizontalSync
 
 
 def test_rename_decision_detection():

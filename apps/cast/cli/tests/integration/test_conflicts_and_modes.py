@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from tests.framework import Sandbox, mk_note, read_file, write_file
+from .._support import Sandbox, mk_note, read_file, write_file
 
 
 def test_interactive_conflict_keep_peer(tmp_path):

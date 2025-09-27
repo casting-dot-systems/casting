@@ -33,4 +33,7 @@ build-backend = "uv_build"
 module-name = "casting.apps.cast.cli"
 namespace = true
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [project.workspace]

@@ -21,3 +21,6 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "casting.cast.sync"
 namespace = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

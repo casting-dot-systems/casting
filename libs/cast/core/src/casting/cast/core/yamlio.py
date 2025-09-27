@@ -16,8 +16,8 @@ yaml.preserve_quotes = True
 yaml.default_flow_style = False
 yaml.width = 4096  # Avoid line wrapping
 
-
-CAST_FIELDS_ORDER = ["cast-id", "cast-hsync", "cast-codebases", "cast-version"]
+# Known cast keys we prefer to show first in the "cast-* properties" section.
+_KNOWN_CAST_KEYS_IN_MIDDLE = ["cast-hsync", "cast-codebases"]
 VAULT_ENTRY_REGEX = re.compile(r"^\s*(?P<name>[^()]+?)\s*\((?P<mode>live|watch)\)\s*$")
 FM_RE = _re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*\r?\n?", _re.DOTALL)
 
@@ -168,33 +168,50 @@ def ensure_cast_fields(
 
 def reorder_cast_fields(front_matter: dict[str, Any]) -> dict[str, Any]:
     """
-    Canonicalize lists and reorder cast-* fields to canonical order after last-updated.
+    Canonicalize lists and reorder YAML to the new canonical layout:
+      1) last-updated
+      2) cast-id
+      3) cast-* properties (known first, then any others alphabetically)
+      4) cast-version
+      5) all remaining (non-cast) fields in their original order
     """
-    # Normalize lists first (cast-hsync sorted/dedup; cast-codebases sorted/dedup)
-    fm = _canonicalize_cast_lists(dict(front_matter))
+    fm = _canonicalize_cast_lists(dict(front_matter or {}))
     result: dict[str, Any] = {}
 
-    # First, preserve any fields before cast-*
-    cast_fields = {}
-    other_fields = {}
-
-    for key, value in fm.items():
-        if key.startswith("cast-"):
-            cast_fields[key] = value
+    # Partition
+    cast_fields: dict[str, Any] = {}
+    other_fields: dict[str, Any] = {}
+    for k, v in fm.items():
+        if isinstance(k, str) and k.startswith("cast-"):
+            cast_fields[k] = v
         else:
-            other_fields[key] = value
+            other_fields[k] = v
 
-    # Add non-cast fields first
+    # 1) last-updated
     if "last-updated" in other_fields:
         result["last-updated"] = other_fields.pop("last-updated")
 
-    # Add cast fields in canonical order
-    for field in CAST_FIELDS_ORDER:
-        if field in cast_fields:
-            result[field] = cast_fields[field]
+    # 2) cast-id
+    if "cast-id" in cast_fields:
+        result["cast-id"] = cast_fields.pop("cast-id")
 
-    # Add any remaining fields
-    result.update(other_fields)
+    # 3) cast-* properties (excluding version)
+    #    3a) known keys in a stable order
+    for k in _KNOWN_CAST_KEYS_IN_MIDDLE:
+        if k in cast_fields and k != "cast-version":
+            result[k] = cast_fields.pop(k)
+    #    3b) any remaining cast-* (excluding version), alphabetical
+    middle_keys = sorted([k for k in cast_fields.keys() if k != "cast-version"], key=str.casefold)
+    for k in middle_keys:
+        result[k] = cast_fields.pop(k)
+
+    # 4) cast-version last within the Cast block
+    if "cast-version" in cast_fields:
+        result["cast-version"] = cast_fields.pop("cast-version")
+
+    # 5) Remaining (non-cast) fields in original order
+    for k, v in other_fields.items():
+        result[k] = v
 
     return result
 
