@@ -1,0 +1,27 @@
+[project]
+name = "casting-gcal"
+version = "0.1.0"
+description = "Google Calendar integration for casting systems"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "httpx>=0.27",
+  "anyio>=4",
+  "pydantic>=2.8",
+  "google-auth>=2.0.0",
+  "google-auth-oauthlib>=1.0.0",
+  "google-auth-httplib2>=0.2.0",
+  "google-api-python-client>=2.0.0",
+  "casting-core",
+]
+
+[project.entry-points."casting.plugins"]
+gcal = "casting.gcal:Plugin"
+
+[build-system]
+requires = ["uv>=0.5.0"]
+build-backend = "uv"
+
+[tool.uv.build-backend]
+module-name = "casting.gcal"
+namespace = true

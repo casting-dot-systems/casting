@@ -1,0 +1,22 @@
+[project]
+name = "casting-core"
+version = "0.1.0"
+description = "Core domain: Cast, pipelines, plugin interfaces"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.8",
+  "anyio>=4",
+  "typing-extensions>=4.12"
+]
+
+[project.entry-points."casting.plugins"]
+core = "casting.core:Plugin"
+
+[build-system]
+requires = ["uv>=0.5.0"]
+build-backend = "uv"
+
+[tool.uv.build-backend]
+module-name = "casting.core"
+namespace = true

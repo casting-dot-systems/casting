@@ -1,0 +1,32 @@
+[project]
+name = "casting-org"
+version = "0.0.0"
+description = "Org-specific testbed inside the general repo"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "casting-core>=0.1.0",
+  "casting-discord-framework>=0.1.0",
+  "casting-discord-processing>=0.1.0",
+  "casting-notion>=0.1.0",
+  "casting-obsidian>=0.1.0",
+  "casting-gcal>=0.1.0",
+  "typer>=0.12",
+  "rich>=13",
+]
+
+# For local dev: pull packages from the monorepo via path sources (editable).
+[tool.uv.sources]
+casting-core = { path = "../../libs/core", editable = true }
+casting-discord-framework = { path = "../../libs/discord/framework", editable = true }
+casting-discord-processing = { path = "../../libs/discord/processing", editable = true }
+casting-notion = { path = "../../libs/notion", editable = true }
+casting-obsidian = { path = "../../libs/obsidian", editable = true }
+casting-gcal = { path = "../../libs/gcal", editable = true }
+
+[project.scripts]
+casting-org-cli = "casting_org.cli:app"
+
+[build-system]
+requires = ["uv>=0.5.0"]
+build-backend = "uv"
