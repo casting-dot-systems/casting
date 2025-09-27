@@ -61,3 +61,52 @@ dev = [
   "ruamel.yaml>=0.18.0",
   "typer>=0.12.0"
 ]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+src = ["apps", "libs", "tests", "orgs", "docs"]
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "E",
+    "F",
+    "I",
+    "N",
+    "T100",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["casting", "casting_org"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.13"
+strict = ["**/*.py"]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+
+[tool.poe.tasks]
+fmt = "ruff format"
+lint = "ruff check --fix"
+check = "pyright"
+test = "pytest"
+all = [
+    { ref = "fmt" },
+    { ref = "lint" },
+    { ref = "check" },
+    { ref = "test" },
+]
+"ci:fmt" = "ruff format --check"
+"ci:lint" = "ruff check"
+"ci:check" = "pyright"
+"ci:test" = "pytest"
+"ci:all" = [
+    { ref = "ci:fmt" },
+    { ref = "ci:lint" },
+    { ref = "ci:check" },
+    { ref = "ci:test" },
+]

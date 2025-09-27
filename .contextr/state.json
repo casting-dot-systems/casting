@@ -1,0 +1,43 @@
+{
+    "current_profile": null,
+    "files": [
+        "apps/cast-explorer/pyproject.toml",
+        "apps/cast/cli/pyproject.toml",
+        "apps/cast/discord/pyproject.toml",
+        "apps/cast/server/pyproject.toml",
+        "apps/cast/tui/pyproject.toml",
+        "apps/prompt-gen/pyproject.toml",
+        "libs/cast/core/pyproject.toml",
+        "libs/cast/git/pyproject.toml",
+        "libs/cast/sync/pyproject.toml",
+        "libs/core/pyproject.toml",
+        "libs/discord/framework/pyproject.toml",
+        "libs/discord/processing/pyproject.toml",
+        "libs/gcal/pyproject.toml",
+        "libs/notion/pyproject.toml",
+        "libs/obsidian/pyproject.toml",
+        "orgs/casting/pyproject.toml",
+        "pyproject.toml"
+    ],
+    "watched_patterns": [
+        "./pyproject.toml",
+        "/pyproject.toml",
+        "apps/cast-explorer/pyproject.toml",
+        "apps/cast/cli/pyproject.toml",
+        "apps/cast/discord/pyproject.toml",
+        "apps/cast/server/pyproject.toml",
+        "apps/cast/tui/pyproject.toml",
+        "apps/prompt-gen/pyproject.toml",
+        "libs/cast/core/pyproject.toml",
+        "libs/cast/git/pyproject.toml",
+        "libs/cast/sync/pyproject.toml",
+        "libs/core/pyproject.toml",
+        "libs/discord/framework/pyproject.toml",
+        "libs/discord/processing/pyproject.toml",
+        "libs/gcal/pyproject.toml",
+        "libs/notion/pyproject.toml",
+        "libs/obsidian/pyproject.toml",
+        "orgs/casting/pyproject.toml",
+        "pyproject.toml"
+    ]
+}
