@@ -1,0 +1,28 @@
+[project]
+name = "discord-bot"
+version = "0.1.0"
+description = "Darcy Discord bot application"
+requires-python = ">=3.13"
+dependencies = [
+    "casting-discord-framework",
+    "cast-query",
+    "llmgine",
+    "litellm>=1.44.4",
+]
+
+
+[tool.uv.sources]
+casting-discord-framework = { workspace = true }
+cast-query = { workspace = true }
+llmgine = { workspace = true }
+
+[project.scripts]
+darcy-bot = "darcy.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "casting.apps.discord_bot"
+namespace = true

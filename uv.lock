@@ -7,8 +7,8 @@ members = [
     "cast-cli",
     "cast-core",
     "cast-discord",
-    "cast-explorer",
     "cast-git",
+    "cast-query",
     "cast-server",
     "cast-sync",
     "cast-tui",
@@ -19,8 +19,8 @@ members = [
     "casting-notion",
     "casting-obsidian",
     "casting-workspace",
+    "discord-bot",
     "llmgine",
-    "prompt-gen",
 ]
 
 [[package]]
@@ -314,29 +314,6 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [[package]]
-name = "cast-explorer"
-version = "0.1.0"
-source = { editable = "apps/cast-explorer" }
-dependencies = [
-    { name = "casting-core" },
-    { name = "casting-discord-framework" },
-    { name = "casting-discord-processing" },
-    { name = "rich" },
-    { name = "textual" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "casting-core", editable = "libs/core" },
-    { name = "casting-discord-framework", editable = "libs/discord/framework" },
-    { name = "casting-discord-processing", editable = "libs/discord/processing" },
-    { name = "rich", specifier = ">=13" },
-    { name = "textual", specifier = ">=0.41.0" },
-    { name = "typer", specifier = ">=0.12" },
-]
-
-[[package]]
 name = "cast-git"
 version = "0.1.0"
 source = { editable = "libs/cast/git" }
@@ -348,6 +325,26 @@ dev = [
 
 [package.metadata]
 requires-dist = [{ name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0" }]
+provides-extras = ["dev"]
+
+[[package]]
+name = "cast-query"
+version = "0.1.0"
+source = { editable = "libs/cast/query" }
+dependencies = [
+    { name = "litellm" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "litellm", specifier = ">=1.44.4" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0" },
+]
 provides-extras = ["dev"]
 
 [[package]]
@@ -444,24 +441,17 @@ name = "casting-discord-framework"
 version = "0.1.0"
 source = { editable = "libs/discord/framework" }
 dependencies = [
-    { name = "anyio" },
-    { name = "httpx" },
-    { name = "pydantic" },
-]
-
-[package.optional-dependencies]
-discord-py = [
     { name = "discord-py" },
+    { name = "llmgine" },
+    { name = "python-dotenv" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "anyio", specifier = ">=4" },
-    { name = "discord-py", marker = "extra == 'discord-py'", specifier = ">=2.4" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "pydantic", specifier = ">=2.8" },
+    { name = "discord-py", specifier = ">=2.4.0" },
+    { name = "llmgine", editable = "llmgine" },
+    { name = "python-dotenv", specifier = ">=1.0.1" },
 ]
-provides-extras = ["discord-py"]
 
 [[package]]
 name = "casting-discord-processing"
@@ -712,6 +702,25 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/7e/9f/0763429949416aeff9c6f33051270831b72e5582273acd28053b9b949462/discord-2.3.2.tar.gz", hash = "sha256:cc1ee2dbe6df218ca51519af355b97e87309f8230f58c7f34885feb8e8a76145", size = 1137, upload-time = "2023-08-10T21:45:07.93Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2d/38/d91ac49e8169b6c0f724f7aad26704eec07c4ecf31e067ca3d46a87e33d6/discord-2.3.2-py3-none-any.whl", hash = "sha256:d7959418799dd3b1e896685812d880169c193468b061b3431fa2a4664febd3da", size = 1132, upload-time = "2023-08-10T21:45:06.334Z" },
+]
+
+[[package]]
+name = "discord-bot"
+version = "0.1.0"
+source = { editable = "apps/discord-bot" }
+dependencies = [
+    { name = "cast-query" },
+    { name = "casting-discord-framework" },
+    { name = "litellm" },
+    { name = "llmgine" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cast-query", editable = "libs/cast/query" },
+    { name = "casting-discord-framework", editable = "libs/discord/framework" },
+    { name = "litellm", specifier = ">=1.44.4" },
+    { name = "llmgine", editable = "llmgine" },
 ]
 
 [[package]]
@@ -2180,27 +2189,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ff/29/7cf5bbc236333876e4b41f56e06857a87937ce4bf91e117a6991a2dbb02a/pre_commit-4.3.0.tar.gz", hash = "sha256:499fe450cc9d42e9d58e606262795ecb64dd05438943c62b66f6a8673da30b16", size = 193792, upload-time = "2025-08-09T18:56:14.651Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/a5/987a405322d78a73b66e39e4a90e4ef156fd7141bf71df987e50717c321b/pre_commit-4.3.0-py2.py3-none-any.whl", hash = "sha256:2b0747ad7e6e967169136edffee14c16e148a778a54e4f967921aa1ebf2308d8", size = 220965, upload-time = "2025-08-09T18:56:13.192Z" },
-]
-
-[[package]]
-name = "prompt-gen"
-version = "0.1.0"
-source = { editable = "apps/prompt-gen" }
-dependencies = [
-    { name = "casting-core" },
-    { name = "jinja2" },
-    { name = "pyyaml" },
-    { name = "rich" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "casting-core", editable = "libs/core" },
-    { name = "jinja2", specifier = ">=3.1.0" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "rich", specifier = ">=13" },
-    { name = "typer", specifier = ">=0.12" },
 ]
 
 [[package]]

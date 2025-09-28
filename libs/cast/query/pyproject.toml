@@ -1,0 +1,22 @@
+[project]
+name = "cast-query"
+version = "0.1.0"
+description = "Cast knowledge base helpers"
+requires-python = ">=3.13"
+dependencies = ["litellm>=1.44.4"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0"
+]
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "casting.cast.query"
+namespace = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

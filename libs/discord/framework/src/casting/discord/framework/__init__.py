@@ -1,12 +1,9 @@
-"""Discord framework: Low-level Discord integration."""
+from .models import ChatContext
+from .protocol import ProcessMessageCommand, PromptRequestCommand, StatusEvent
 
-__version__ = "0.1.0"
-__all__ = ["Plugin"]
-
-
-class Plugin:
-    """Discord framework plugin for low-level Discord integration."""
-
-    def __init__(self):
-        self.name = "discord_framework"
-        self.version = __version__
+__all__ = [
+    "ChatContext",
+    "ProcessMessageCommand",
+    "PromptRequestCommand",
+    "StatusEvent",
+]

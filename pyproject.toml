@@ -20,6 +20,8 @@ members = [
     "apps/cast/tui",
     "apps/cast/server",
     "apps/cast/discord",
+    "libs/cast/query",
+    "apps/discord-bot",
     "libs/core",
     "libs/discord/framework",
     "libs/discord/processing",
@@ -44,6 +46,7 @@ casting-obsidian = { workspace = true }
 casting-gcal = { workspace = true }
 cast-core = { workspace = true }
 cast-sync = { workspace = true }
+cast-query = { workspace = true}
 cast-git = { workspace = true }
 cast-server = { workspace = true }
 cast-discord = { workspace = true }
@@ -88,7 +91,7 @@ known-first-party = ["casting", "casting_org"]
 include = [
     "apps",
     "libs",
-    "llmgine/src",
+    "llmgine",
     "tests"
 ]
 exclude = [

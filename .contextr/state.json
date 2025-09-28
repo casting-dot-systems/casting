@@ -1,38 +1,5 @@
 {
     "current_profile": null,
-    "files": [
-        "apps/cast/cli/src/casting/apps/cast/cli/__init__.py",
-        "apps/cast/cli/src/casting/apps/cast/cli/__main__.py",
-        "apps/cast/cli/src/casting/apps/cast/cli/cli.py",
-        "apps/cast/cli/src/casting/apps/cast/cli/gdoc.py",
-        "apps/cast/cli/src/casting/apps/cast/cli/tui.py",
-        "apps/cast/cli/src/casting/apps/cast/cli/tui_plugin.py",
-        "libs/cast/core/pyproject.toml",
-        "libs/cast/core/src/casting/cast/core/__init__.py",
-        "libs/cast/core/src/casting/cast/core/digest.py",
-        "libs/cast/core/src/casting/cast/core/filelock.py",
-        "libs/cast/core/src/casting/cast/core/models.py",
-        "libs/cast/core/src/casting/cast/core/registry.py",
-        "libs/cast/core/src/casting/cast/core/yamlio.py",
-        "libs/cast/core/tests/__init__.py",
-        "libs/cast/core/tests/unit/__init__.py",
-        "libs/cast/core/tests/unit/test_digest.py",
-        "libs/cast/sync/pyproject.toml",
-        "libs/cast/sync/src/casting/cast/sync/__init__.py",
-        "libs/cast/sync/src/casting/cast/sync/cbsync.py",
-        "libs/cast/sync/src/casting/cast/sync/conflict.py",
-        "libs/cast/sync/src/casting/cast/sync/hsync.py",
-        "libs/cast/sync/src/casting/cast/sync/index.py",
-        "libs/cast/sync/src/casting/cast/sync/rename_cascade.py",
-        "libs/cast/sync/tests/__init__.py",
-        "libs/cast/sync/tests/unit/__init__.py",
-        "libs/cast/sync/tests/unit/test_rename.py",
-        "libs/cast/sync/tests/unit/test_rename_simple.py",
-        "libs/cast/sync/tests/unit/test_sync.py"
-    ],
-    "watched_patterns": [
-        "/Users/nathan/dev/cast/casting-systems/apps/cast/cli/src/casting/apps/cast/cli",
-        "/Users/nathan/dev/cast/casting-systems/libs/cast/core",
-        "/Users/nathan/dev/cast/casting-systems/libs/cast/sync"
-    ]
+    "files": [],
+    "watched_patterns": []
 }
