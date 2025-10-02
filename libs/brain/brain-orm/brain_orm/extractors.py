@@ -36,7 +36,7 @@ class DiscordOrmExtractor:
         ssl._create_default_https_context = ssl._create_unverified_context
 
         # Load environment variables
-        load_dotenv()
+        load_dotenv(override=True)
         self.api = api
         self.org_id = org_id
         self.token = bot_token or os.getenv("BOT_KEY")

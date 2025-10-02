@@ -1,20 +1,17 @@
 [project]
-name = "identity-app"
+name = "casting-identity"
 version = "0.1.0"
-description = "Cast Identity App"
+description = "Identity library for Casting Systems (maps external identities to catalog.members)"
 requires-python = ">=3.13"
 dependencies = [
     "sqlalchemy>=2.0.40",
-    "pandas>=2.2.3",
-    "asyncpg>=0.29.0",
     "psycopg2-binary>=2.9.0",
 ]
-
 
 [build-system]
 requires = ["uv_build>=0.8.22,<0.9.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "casting.apps.identity"
+module-name = "casting.identity"
 namespace = true

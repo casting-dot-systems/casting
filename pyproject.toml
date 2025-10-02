@@ -1,8 +1,7 @@
 [project]
 name = "casting-workspace"
-version = "0.0.0"
+version = "0.0.1"
 description = "Workspace root for Casting monorepo"
-requires-python = ">=3.13"
 dependencies = []
 
 # Do not install the root into the venv.
@@ -30,7 +29,9 @@ members = [
     "libs/gcal",
     "libs/cast/core",
     "libs/cast/sync",
-    "libs/cast/git"
+    "libs/cast/git",
+    "libs/identity",
+    "apps/identity"
 ]
 exclude = ["orgs/*"]
 
@@ -52,8 +53,14 @@ cast-server = { workspace = true }
 cast-discord = { workspace = true }
 cast-cli = { workspace = true }
 cast-tui = { workspace = true }
+casting-identity = { workspace = true }
+identity-app = { workspace = true }
 
 [dependency-groups]
+cast-query = [
+    "chromadb>=1.1.0",
+    "litellm>=1.77.4",
+]
 dev = [
   "pytest>=8.3.0",
   "pytest-asyncio>=0.23",

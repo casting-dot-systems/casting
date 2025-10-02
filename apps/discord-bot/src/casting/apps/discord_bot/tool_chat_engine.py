@@ -23,6 +23,9 @@ from casting.discord.framework.protocol import PromptRequestCommand
 
 # Optional pydantic-ai support could be added here if needed
 
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 @dataclass
 class DarcyToolChatEngineCommand(Command):

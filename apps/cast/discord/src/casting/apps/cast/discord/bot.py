@@ -10,11 +10,6 @@ from casting.apps.cast.discord.utils.helpers import get_discord_config, is_autho
 from casting.apps.cast.discord.commands.git_commands import GitCommands
 from casting.apps.cast.discord.commands.markdown_commands import MarkdownCommands
 
-# Load environment variables from the Discord app directory
-discord_app_dir = Path(__file__).parent.parent.parent.parent
-env_file = discord_app_dir / '.env'
-load_dotenv(env_file)
-
 class CastingBot(commands.Bot):
     def __init__(self):
         self.config = get_discord_config()

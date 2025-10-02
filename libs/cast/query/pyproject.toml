@@ -3,7 +3,10 @@ name = "cast-query"
 version = "0.1.0"
 description = "Cast knowledge base helpers"
 requires-python = ">=3.13"
-dependencies = ["litellm>=1.44.4"]
+dependencies = [
+  "litellm>=1.44.4",
+  "chromadb>=0.5.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -20,3 +23,4 @@ namespace = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]  # ensure `casting.*` resolves for tests
