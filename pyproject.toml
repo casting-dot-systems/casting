@@ -13,27 +13,17 @@ default-groups = ["dev"]
 # Include general libs and apps; *exclude* orgs
 members = [
     "llmgine",
-    "apps/cast-explorer",
-    "apps/prompt-gen",
-    "apps/cast/cli",
-    "apps/cast/tui",
-    "apps/cast/server",
-    "apps/cast/discord",
-    "libs/cast/query",
-    "apps/discord-bot",
-    "libs/core",
-    "libs/discord/framework",
-    "libs/discord/processing",
-    "libs/notion",
-    "libs/obsidian",
-    "libs/gcal",
-    "libs/cast/core",
-    "libs/cast/sync",
-    "libs/cast/git",
-    "libs/identity",
-    "apps/identity"
+    "apps/*"
 ]
-exclude = ["orgs/*"]
+exclude = [
+    "orgs/*",
+    "apps/identity",
+    "apps/cast",
+    "libs/brain",
+    "libs/brain/*",
+    "libs/cast",
+    "libs/discord"
+    ]
 
 # Workspace-wide mapping: when a member depends on these names,
 # satisfy them from the workspace (editable).

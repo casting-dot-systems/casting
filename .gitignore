@@ -198,5 +198,6 @@ credentials/
 *.pfx
 
 orgs/*
+orgs
 llmgine/*
 llmgine
