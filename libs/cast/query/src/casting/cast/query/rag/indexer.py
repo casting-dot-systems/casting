@@ -17,7 +17,7 @@ from casting.cast.query.rag.chroma_store import ChromaStore, ChromaEmbeddingWrap
 
 @dataclass
 class FileToIndex:
-    cast_id: str
+    file_id: str
     relpath: str
     title: str
     digest: str
@@ -81,13 +81,13 @@ def _iter_files_to_index(vault_path: Path) -> Iterable[FileToIndex]:
             if typ in {"prompt", "spec"}:
                 continue
             cast_fields = extract_cast_fields(fm)
-            cast_id = cast_fields.get("cast-id")
-            if not cast_id:
+            file_id = cast_fields.get("id")
+            if not file_id:
                 continue
             title = fm.get("title") or fm.get("name") or md.stem
             digest = compute_digest(fm, body)
             yield FileToIndex(
-                cast_id=cast_id,
+                file_id=file_id,
                 relpath=str(md.relative_to(vault_path)),
                 title=str(title),
                 digest=digest,
@@ -120,7 +120,7 @@ def build_or_update_index(
     """
     Build / update the Chroma index for the current Cast.
 
-    - Index key: file cast-id (chunks are id::0000, id::0001, …)
+    - Index key: file id (chunks are id::0000, id::0001, …)
     - Re-embed only when the file's digest changes
     - If only 'relpath' changes (rename), metadata is updated without re-embedding
     - Optionally remove orphans (records for files no longer present)
@@ -136,12 +136,12 @@ def build_or_update_index(
 
     added = updated = skipped = renamed_only = deleted_orphans = chunk_count = 0
 
-    # Track currently present file cast-ids
+    # Track currently present file ids
     present_ids: set[str] = set()
 
     for file in _iter_files_to_index(vault_path):
-        present_ids.add(file.cast_id)
-        ids_existing, metas_existing = store.get_file_records(file.cast_id)
+        present_ids.add(file.file_id)
+        ids_existing, metas_existing = store.get_file_records(file.file_id)
 
         existing_digest_set = {m.get("digest") for m in metas_existing} if metas_existing else set()
         existing_relpaths = {m.get("relpath") for m in metas_existing} if metas_existing else set()
@@ -169,10 +169,10 @@ def build_or_update_index(
 
         chunks = _chunks_for(file.body, file.title, max_chars=embedder.max_chars)
         chunk_count += len(chunks)
-        chunk_ids = [f"{file.cast_id}::{i:04d}" for i in range(len(chunks))]
+        chunk_ids = [f"{file.file_id}::{i:04d}" for i in range(len(chunks))]
         metadatas = [
             {
-                "file_cast_id": file.cast_id,
+                "file_id": file.file_id,
                 "relpath": file.relpath,
                 "digest": file.digest,
                 "chunk_index": i,

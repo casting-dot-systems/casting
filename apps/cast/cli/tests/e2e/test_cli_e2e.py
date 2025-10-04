@@ -22,17 +22,16 @@ def _read(p: Path) -> str:
     return p.read_text(encoding="utf-8")
 
 
-def _mk_note(cast_id: str, peers: list[str], title: str, body: str = "Body") -> str:
+def _mk_note(note_id: str, peers: list[str], title: str, body: str = "Body") -> str:
     lines = [
         "---",
-        f"cast-id: {cast_id}",
+        f"id: {note_id}",
         "cast-vaults:",
     ]
     for n in peers:
         lines.append(f"- {n} (live)")
     lines.extend(
         [
-            "cast-version: 1",
             f"title: {title}",
             "---",
             body,
@@ -85,11 +84,11 @@ def test_full_flow_install_list_sync(env, tmp_path: Path):
     assert {"vault1", "vault2"} <= names
 
     # create a note in vault1
-    # pick a stable cast-id for determinism
+    # pick a stable id for determinism
     cid = "11111111-1111-1111-1111-111111111111"
     note_rel = Path("Cast") / "note.md"
     note1 = root1 / note_rel
-    text = _mk_note(cast_id=cid, peers=["vault1", "vault2"], title="Note A", body="Hello")
+    text = _mk_note(note_id=cid, peers=["vault1", "vault2"], title="Note A", body="Hello")
     _write_file(note1, text)
 
     # hsync from vault1 → should push to vault2
@@ -107,11 +106,11 @@ def test_full_flow_install_list_sync(env, tmp_path: Path):
 
     # validate baseline exists in root1/.cast/syncstate.json
     syncstate = json.loads((root1 / ".cast" / "syncstate.json").read_text(encoding="utf-8"))
-    assert cid in syncstate.get("baselines", {}), "baseline should be recorded for cast-id"
+    assert cid in syncstate.get("baselines", {}), "baseline should be recorded for id"
 
     # modify peer, then hsync from vault1 → should PULL
     _write_file(
-        note2, _mk_note(cast_id=cid, peers=["vault1", "vault2"], title="Note A", body="PeerEdit")
+        note2, _mk_note(note_id=cid, peers=["vault1", "vault2"], title="Note A", body="PeerEdit")
     )
     old_cwd = os.getcwd()
     try:
@@ -146,7 +145,7 @@ def test_first_contact_identical_sets_baseline(env, tmp_path: Path):
     cid = "22222222-2222-2222-2222-222222222222"
     rel = Path("Cast") / "same.md"
     body = "Same content"
-    text = _mk_note(cast_id=cid, peers=["vault1", "vault2"], title="Same", body=body)
+    text = _mk_note(note_id=cid, peers=["vault1", "vault2"], title="Same", body=body)
     _write_file(root1 / rel, text)
     _write_file(root2 / rel, text)
 
@@ -163,7 +162,7 @@ def test_first_contact_identical_sets_baseline(env, tmp_path: Path):
     assert cid in syncstate.get("baselines", {}), "baseline should be recorded even with NO_OP"
 
 
-def test_safe_push_rename_when_peer_has_different_cast_id(env, tmp_path: Path):
+def test_safe_push_rename_when_peer_has_different_id(env, tmp_path: Path):
     root1 = tmp_path / "r1"
     root2 = tmp_path / "r2"
     root1.mkdir()
@@ -185,15 +184,15 @@ def test_safe_push_rename_when_peer_has_different_cast_id(env, tmp_path: Path):
 
     rel = Path("Cast") / "conflict.md"
 
-    # local cast-id A
+    # local id A
     cid_a = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     _write_file(
-        root1 / rel, _mk_note(cast_id=cid_a, peers=["vault1", "vault2"], title="A", body="A")
+        root1 / rel, _mk_note(note_id=cid_a, peers=["vault1", "vault2"], title="A", body="A")
     )
 
-    # peer already has a different cast-id B at the same path
+    # peer already has a different id B at the same path
     cid_b = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
-    _write_file(root2 / rel, _mk_note(cast_id=cid_b, peers=["vault2"], title="B", body="B"))
+    _write_file(root2 / rel, _mk_note(note_id=cid_b, peers=["vault2"], title="B", body="B"))
 
     # hsync should NOT overwrite root2/conflict.md; it should create "conflict (~from vault1).md"
     old_cwd = os.getcwd()
@@ -233,7 +232,7 @@ def test_delete_local_propagates_to_peer(env, tmp_path: Path):
 
     cid = "33333333-3333-3333-3333-333333333333"
     rel = Path("Cast") / "to-delete.md"
-    note_text = _mk_note(cast_id=cid, peers=["vault1", "vault2"], title="Del", body="X")
+    note_text = _mk_note(note_id=cid, peers=["vault1", "vault2"], title="Del", body="X")
     _write_file(root1 / rel, note_text)
 
     # Initial sync: push to peer
@@ -279,7 +278,7 @@ def test_delete_peer_pulls_delete_locally(env, tmp_path: Path):
 
     cid = "44444444-4444-4444-4444-444444444444"
     rel = Path("Cast") / "peer-deletes.md"
-    text = _mk_note(cast_id=cid, peers=["vault1", "vault2"], title="PeerDel", body="Z")
+    text = _mk_note(note_id=cid, peers=["vault1", "vault2"], title="PeerDel", body="Z")
     _write_file(root1 / rel, text)
 
     # Initial sync to establish baseline on both
@@ -303,3 +302,59 @@ def test_delete_peer_pulls_delete_locally(env, tmp_path: Path):
     assert not (root1 / rel).exists(), "local file should be deleted after peer deletion"
     state = json.loads((root1 / ".cast" / "syncstate.json").read_text(encoding="utf-8"))
     assert cid not in state.get("baselines", {}), "baseline should be cleared after pulled deletion"
+
+
+def test_scripts_execute_migration(env, tmp_path: Path):
+    root = tmp_path / "vault"
+    root.mkdir()
+
+    import os
+
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(root)
+        assert runner.invoke(app, ["init", "--name", "Vault"], env=env).exit_code == 0
+    finally:
+        os.chdir(old_cwd)
+
+    note = root / "Cast" / "note.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(
+        """---
+cast-id: 99999999-9999-4999-8999-999999999999
+cast-version: 3
+base-version: 2
+title: Legacy
+---
+Body
+""",
+        encoding="utf-8",
+    )
+
+    conflicts_dir = root / ".cast" / "conflicts"
+    conflicts_dir.mkdir(parents=True, exist_ok=True)
+    (conflicts_dir / "dummy.md").write_text("dummy", encoding="utf-8")
+
+    try:
+        os.chdir(root)
+        res = runner.invoke(app, ["scripts", "execute", "rename-identifiers", "--dry-run"], env=env)
+        assert res.exit_code == 0, res.output
+    finally:
+        os.chdir(old_cwd)
+
+    text = note.read_text(encoding="utf-8")
+    assert "cast-id" in text
+    assert conflicts_dir.exists()
+
+    try:
+        os.chdir(root)
+        res = runner.invoke(app, ["scripts", "execute", "rename-identifiers"], env=env)
+        assert res.exit_code == 0, res.output
+    finally:
+        os.chdir(old_cwd)
+
+    text = note.read_text(encoding="utf-8")
+    assert "id:" in text and "cast-id" not in text
+    assert "cast-version" not in text
+    assert "base-version" not in text
+    assert not conflicts_dir.exists()

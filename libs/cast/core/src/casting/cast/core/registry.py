@@ -67,9 +67,10 @@ def save_registry(reg: dict[str, Any]) -> None:
 
 @dataclass
 class CastEntry:
-    cast_id: str
+    id: str
     name: str
     root: Path
+
     # Standardized: content folder is always root / "Cast"
     @property
     def cast_path(self) -> Path:
@@ -87,16 +88,16 @@ class CodebaseEntry:
 
 
 def _read_cast_config(root: Path) -> tuple[str, str]:
-    """Return (cast_id, cast_name) from .cast/config.yaml in root."""
+    """Return (id, cast_name) from .cast/config.yaml in root."""
     cfg = root / ".cast" / "config.yaml"
     if not cfg.exists():
         raise FileNotFoundError(f"config.yaml not found at: {cfg}")
     with open(cfg, encoding="utf-8") as f:
         data = yaml.load(f) or {}
-    cast_id = data.get("cast-id")
+    cast_id = data.get("id")
     cast_name = data.get("cast-name")
     if not cast_id or not cast_name:
-        raise ValueError("config.yaml missing required fields: cast-id/cast-name")
+        raise ValueError("config.yaml missing required fields: id/cast-name")
     return cast_id, cast_name
 
 
@@ -105,7 +106,7 @@ def register_cast(root: Path) -> CastEntry:
     Register/update a Cast root in the machine registry.
 
     Invariants enforced:
-      • Exactly one entry per cast-id (keyed as before).
+      • Exactly one entry per id (keyed as before).
       • Exactly one entry per name (new): any other entry that uses the same name is removed.
       • Exactly one entry per root path (new): any other entry that uses the same root is removed.
     """
@@ -134,13 +135,13 @@ def register_cast(root: Path) -> CastEntry:
     # Upsert our entry by id (canonical)
     reg["casts"][cast_id] = {"name": name, "root": str(root)}
     save_registry(reg)
-    return CastEntry(cast_id=cast_id, name=name, root=root)
+    return CastEntry(id=cast_id, name=name, root=root)
 
 
 def _entry_from_reg(cast_id: str, payload: dict[str, Any]) -> CastEntry:
     # Ignore legacy 'vault_location' if present; standardized to "Cast"
     return CastEntry(
-        cast_id=cast_id,
+        id=cast_id,
         name=payload.get("name", ""),
         root=Path(payload.get("root", "")),
     )
@@ -154,12 +155,12 @@ def list_casts() -> list[CastEntry]:
     return out
 
 
-def resolve_cast_by_id(cast_id: str) -> CastEntry | None:
+def resolve_cast_by_id(id: str) -> CastEntry | None:
     reg = load_registry()
-    data = reg.get("casts", {}).get(cast_id)
+    data = reg.get("casts", {}).get(id)
     if not data:
         return None
-    return _entry_from_reg(cast_id, data)
+    return _entry_from_reg(id, data)
 
 
 def resolve_cast_by_name(name: str) -> CastEntry | None:
@@ -171,19 +172,19 @@ def resolve_cast_by_name(name: str) -> CastEntry | None:
 
 
 def unregister_cast(
-    *, cast_id: str | None = None, name: str | None = None, root: Path | None = None
+    *, id: str | None = None, name: str | None = None, root: Path | None = None
 ) -> CastEntry | None:
     """
     Remove a Cast from the machine registry.
-    You may specify by cast_id, name, or root path.
+    You may specify by id, name, or root path.
     Returns the removed CastEntry if found, else None.
     """
     reg = load_registry()
     casts = reg.get("casts", {})
     target_id: str | None = None
 
-    if cast_id and cast_id in casts:
-        target_id = cast_id
+    if id and id in casts:
+        target_id = id
     elif name:
         for cid, data in casts.items():
             if data.get("name") == name:

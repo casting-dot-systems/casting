@@ -7,14 +7,14 @@ def test_digest_ignores_last_updated():
     """Test that digest ignores last-updated field."""
     front_matter1 = {
         "last-updated": "2025-08-18 10:00",
-        "cast-id": "test-123",
+        "id": "test-123",
         "cast-vaults": ["VaultA (live)"],
         "title": "Test Note",
     }
 
     front_matter2 = {
         "last-updated": "2025-08-19 15:30",  # Different timestamp
-        "cast-id": "test-123",
+        "id": "test-123",
         "cast-vaults": ["VaultA (live)"],
         "title": "Test Note",
     }
@@ -30,7 +30,7 @@ def test_digest_ignores_last_updated():
 def test_digest_changes_with_content():
     """Test that digest changes when content changes."""
     front_matter = {
-        "cast-id": "test-123",
+        "id": "test-123",
         "cast-vaults": ["VaultA (live)"],
     }
 
@@ -46,13 +46,13 @@ def test_digest_changes_with_content():
 def test_digest_changes_with_yaml():
     """Test that digest changes when YAML fields change."""
     front_matter1 = {
-        "cast-id": "test-123",
+        "id": "test-123",
         "cast-vaults": ["VaultA (live)"],
         "custom-field": "value1",
     }
 
     front_matter2 = {
-        "cast-id": "test-123",
+        "id": "test-123",
         "cast-vaults": ["VaultA (live)"],
         "custom-field": "value2",  # Different value
     }
@@ -70,7 +70,7 @@ def test_normalize_yaml_deterministic():
     front_matter = {
         "field-z": "last",
         "field-a": "first",
-        "cast-id": "test",
+        "id": "test",
         "last-updated": "2025-08-18 10:00",
     }
 

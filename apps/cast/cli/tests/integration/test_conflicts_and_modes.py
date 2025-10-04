@@ -22,7 +22,7 @@ def test_interactive_conflict_keep_peer(tmp_path):
         )
 
 
-def test_safe_push_rename_when_peer_has_different_cast_id(tmp_path):
+def test_safe_push_rename_when_peer_has_different_id(tmp_path):
     with Sandbox(tmp_path) as sb:
         A = sb.create_vault("A")
         B = sb.create_vault("B")

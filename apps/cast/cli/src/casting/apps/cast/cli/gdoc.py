@@ -452,7 +452,7 @@ def gdoc_new(
     # Initialize front-matter
     front = {
         "url": url,
-        # Ensure Cast fields exist (cast-id, cast-version).
+        # Ensure Cast fields exist (id).
         # cast-hsync/codebases left to the user or hsync to manage.
     }
     front, _ = ensure_cast_fields(front, generate_id=True)

@@ -14,8 +14,7 @@ def _mk_cast(root: Path, name: str) -> Path:
     (root / ".cast").mkdir(parents=True, exist_ok=True)
     (root / "Cast").mkdir(parents=True, exist_ok=True)
     cfg = {
-        "cast-version": 1,
-        "cast-id": "11111111-1111-4111-8111-111111111111",
+        "id": "11111111-1111-4111-8111-111111111111",
         "cast-name": name,
     }
     import ruamel.yaml

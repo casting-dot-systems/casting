@@ -22,7 +22,7 @@ def _mk_cast(tmp: Path) -> Path:
 
     y = ruamel.yaml.YAML()
     cfg = {
-        "cast-id": "test-cast-id-" + str(uuid4()),
+        "id": "test-id-" + str(uuid4()),
         "cast-name": "TestCast",
         "cast-location": "Cast",
     }
@@ -33,13 +33,13 @@ def _mk_cast(tmp: Path) -> Path:
     return tmp / "Cast"
 
 
-def _write_cast_note(vault: Path, rel: str, title: str, body: str, *, cast_id: str | None = None, extra: dict | None = None):
+def _write_cast_note(vault: Path, rel: str, title: str, body: str, *, note_id: str | None = None, extra: dict | None = None):
     p = vault / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     y = ruamel.yaml.YAML()
     fm = {
         "title": title,
-        "cast-id": cast_id or str(uuid4()),
+        "id": note_id or str(uuid4()),
         "cast-hsync": ["TestCast (live)"],
         "last-updated": "2025-01-01",
     }
@@ -50,7 +50,7 @@ def _write_cast_note(vault: Path, rel: str, title: str, body: str, *, cast_id: s
     y.dump(fm, stream)
     front = stream.getvalue().strip()
     p.write_text(f"---\n{front}\n---\n\n{body}\n", encoding="utf-8")
-    return fm["cast-id"], p
+    return fm["id"], p
 
 
 def test_index_add_update_skip_rename_and_cleanup(tmp_path: Path):

@@ -4,8 +4,8 @@
 def test_sync_decision_no_baseline_same():
     """Test sync decision when files are identical with no baseline."""
     # Mock data
-    local_rec = {"cast_id": "test-123", "digest": "abc123", "peers": {"VaultB": "live"}}
-    peer_rec = {"cast_id": "test-123", "digest": "abc123"}
+    local_rec = {"id": "test-123", "digest": "abc123", "peers": {"VaultB": "live"}}
+    peer_rec = {"id": "test-123", "digest": "abc123"}
 
     # Create sync instance (would need proper mocking in real tests)
     # This is a simplified test showing the logic

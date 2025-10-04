@@ -108,7 +108,7 @@ class Sandbox:
         # Use the CLI's list --json to find all registered casts (by id)
         payload = self.cast_list()
         for c in payload:
-            self.run(["uninstall", c["cast_id"]])
+            self.run(["uninstall", c["id"]])
 
     # --- Operations ---------------------------------------------------------
     def hsync(

@@ -103,14 +103,21 @@ def parse_cast_file(filepath: Path) -> tuple[dict[str, Any] | None, str, bool]:
         return None, content, False
 
     # Check if it has any cast-* fields
-    has_cast_fields = any(k.startswith("cast-") for k in front_matter)
+    has_cast_fields = any(
+        isinstance(k, str) and (k.startswith("cast-") or k == "id")
+        for k in front_matter
+    )
 
     return front_matter, body, has_cast_fields
 
 
 def extract_cast_fields(front_matter: dict[str, Any]) -> dict[str, Any]:
-    """Extract only cast-* fields from front matter."""
-    return {k: v for k, v in front_matter.items() if k.startswith("cast-")}
+    """Extract Cast-related fields (including ``id``) from front matter."""
+    return {
+        k: v
+        for k, v in front_matter.items()
+        if isinstance(k, str) and (k.startswith("cast-") or k == "id")
+    }
 
 
 def parse_hsync_entries(entries: list[str] | None) -> dict[str, str]:
@@ -141,7 +148,7 @@ def ensure_cast_fields(
     front_matter: dict[str, Any], generate_id: bool = True
 ) -> tuple[dict[str, Any], bool]:
     """
-    Ensure cast-id exists and validate cast-vaults format.
+    Ensure ``id`` exists and validate cast-vaults format.
 
     Returns:
         (updated_front_matter, was_modified)
@@ -151,14 +158,20 @@ def ensure_cast_fields(
     if "last-updated" not in front_matter:
         front_matter["last-updated"] = ""
 
-    # Generate cast-id if missing
-    if generate_id and "cast-id" not in front_matter:
-        front_matter["cast-id"] = str(uuid.uuid4())
-        modified = True
+    if generate_id:
+        id_present = "id" in front_matter
+        current_id = front_matter.get("id") if id_present else None
+        id_missing = not id_present or current_id is None
+        id_blank = isinstance(current_id, str) and current_id.strip() == ""
 
-    # Ensure cast-version
-    if "cast-version" not in front_matter:
-        front_matter["cast-version"] = 1
+        if id_missing or id_blank:
+            front_matter["id"] = str(uuid.uuid4())
+            modified = True
+
+    # Remove legacy version markers if still present
+    if front_matter.pop("cast-version", None) is not None:
+        modified = True
+    if front_matter.pop("base-version", None) is not None:
         modified = True
 
     # NOTE: Do not mutate 'cast-hsync' here. Invalid entries are handled at routing time.
@@ -168,12 +181,11 @@ def ensure_cast_fields(
 
 def reorder_cast_fields(front_matter: dict[str, Any]) -> dict[str, Any]:
     """
-    Canonicalize lists and reorder YAML to the new canonical layout:
+    Canonicalize lists and reorder YAML to the canonical layout:
       1) last-updated
-      2) cast-id
+      2) id
       3) cast-* properties (known first, then any others alphabetically)
-      4) cast-version
-      5) all remaining (non-cast) fields in their original order
+      4) all remaining (non-cast) fields in their original order
     """
     fm = _canonicalize_cast_lists(dict(front_matter or {}))
     result: dict[str, Any] = {}
@@ -191,25 +203,23 @@ def reorder_cast_fields(front_matter: dict[str, Any]) -> dict[str, Any]:
     if "last-updated" in other_fields:
         result["last-updated"] = other_fields.pop("last-updated")
 
-    # 2) cast-id
-    if "cast-id" in cast_fields:
-        result["cast-id"] = cast_fields.pop("cast-id")
+    # 2) id (preferred)
+    if "id" in other_fields:
+        result["id"] = other_fields.pop("id")
+    elif "id" in cast_fields:
+        result["id"] = cast_fields.pop("id")
 
     # 3) cast-* properties (excluding version)
     #    3a) known keys in a stable order
     for k in _KNOWN_CAST_KEYS_IN_MIDDLE:
-        if k in cast_fields and k != "cast-version":
+        if k in cast_fields:
             result[k] = cast_fields.pop(k)
     #    3b) any remaining cast-* (excluding version), alphabetical
-    middle_keys = sorted([k for k in cast_fields.keys() if k != "cast-version"], key=str.casefold)
+    middle_keys = sorted(cast_fields.keys(), key=str.casefold)
     for k in middle_keys:
         result[k] = cast_fields.pop(k)
 
-    # 4) cast-version last within the Cast block
-    if "cast-version" in cast_fields:
-        result["cast-version"] = cast_fields.pop("cast-version")
-
-    # 5) Remaining (non-cast) fields in original order
+    # 4) Remaining (non-cast) fields in original order
     for k, v in other_fields.items():
         result[k] = v
 
@@ -223,6 +233,9 @@ def write_cast_file(
     # Migrate legacy field name inline if still present
     if "cast-vaults" in front_matter and "cast-hsync" not in front_matter:
         front_matter["cast-hsync"] = front_matter.pop("cast-vaults")
+    # Drop deprecated fields
+    front_matter.pop("cast-version", None)
+    front_matter.pop("base-version", None)
     # Always canonicalize lists; optionally reorder keys
     front_matter = reorder_cast_fields(front_matter) if reorder else _canonicalize_cast_lists(front_matter)
 
@@ -245,8 +258,7 @@ def ensure_codebase_membership(
 ) -> tuple[dict[str, Any], bool]:
     """
     Ensure a note is ready to participate in a codebase:
-      - cast-id present (delegates to ensure_cast_fields)
-      - cast-version present
+      - id present (delegates to ensure_cast_fields)
       - 'cast-codebases' includes `codebase`
       - 'cast-hsync' includes '<origin_cast> (live)'
     """

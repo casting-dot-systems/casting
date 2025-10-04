@@ -14,7 +14,7 @@ def _mk_cast(tmp: Path) -> Path:
     (tmp / "Cast").mkdir(parents=True, exist_ok=True)
 
     y = ruamel.yaml.YAML()
-    cfg = {"cast-id": "search-cast-id-" + str(uuid4()), "cast-name": "SearchCast", "cast-location": "Cast"}
+    cfg = {"id": "search-id-" + str(uuid4()), "cast-name": "SearchCast", "cast-location": "Cast"}
     from io import StringIO
     stream = StringIO()
     y.dump(cfg, stream)
@@ -26,7 +26,7 @@ def _note(vault: Path, rel: str, title: str, body: str):
     y = ruamel.yaml.YAML()
     fm = {
         "title": title,
-        "cast-id": str(uuid4()),
+        "id": str(uuid4()),
         "cast-hsync": ["SearchCast (live)"],
     }
     from io import StringIO

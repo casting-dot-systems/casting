@@ -35,7 +35,7 @@ def _normalize_peers(peers: Iterable[Any]) -> list[str]:
 
 
 def mk_note(
-    cast_id: str,
+    note_id: str,
     title: str,
     body: str,
     *,
@@ -45,14 +45,13 @@ def mk_note(
     """Create a markdown note with YAML front matter including cast-* fields."""
     lines = [
         "---",
-        f"cast-id: {cast_id}",
+        f"id: {note_id}",
         "cast-hsync:",
     ]
     for e in _normalize_peers(peers or []):
         lines.append(f"- {e}")
     lines.extend(
         [
-            "cast-version: 1",
             f"title: {title}",
         ]
     )

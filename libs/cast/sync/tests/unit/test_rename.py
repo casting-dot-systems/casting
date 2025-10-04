@@ -7,14 +7,14 @@ from casting.cast.sync.hsync import SyncDecision, HorizontalSync
 
 def test_rename_decision_detection():
     """Test that rename decisions are correctly detected when paths differ but content matches."""
-    # Test data with same cast-id and digest but different paths
+    # Test data with same id and digest but different paths
     local_rec = {
-        "cast_id": "test-123",
+        "id": "test-123",
         "digest": "abc123",
         "relpath": "Notes/Test.md",
         "peers": {"VaultB": "live"},
     }
-    peer_rec = {"cast_id": "test-123", "digest": "abc123", "relpath": "Projects/Test.md"}
+    peer_rec = {"id": "test-123", "digest": "abc123", "relpath": "Projects/Test.md"}
 
     # Mock the _decide_sync logic
     mode = "live"

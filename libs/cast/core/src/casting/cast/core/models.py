@@ -2,7 +2,7 @@
 
 from typing import Literal, TypedDict
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CastConfig(BaseModel):
@@ -11,8 +11,7 @@ class CastConfig(BaseModel):
     # Accept both alias keys (e.g., "cast-name") and field names ("cast_name")
     model_config = ConfigDict(populate_by_name=True)
 
-    cast_version: int = Field(default=1, alias="cast-version")
-    cast_id: str = Field(description="UUID4 for this Cast/Root", alias="cast-id")
+    id: str = Field(description="UUID4 for this Cast/Root", alias="id", serialization_alias="id")
     cast_name: str = Field(description="Name of this cast", alias="cast-name")
     # DEPRECATED: location is standardized to "Cast" and omitted from new configs.
     cast_location: str = Field(
@@ -57,7 +56,7 @@ class VaultMode(TypedDict):
 class FileRec(TypedDict):
     """In-memory file record during hsync."""
 
-    cast_id: str
+    id: str
     relpath: str
     digest: str
     peers: dict[str, Literal["live", "watch"]]  # name -> mode
@@ -80,15 +79,14 @@ class SyncState(BaseModel):
     version: int = Field(default=1)
     updated_at: str = Field(description="Last update timestamp")
     baselines: dict[str, dict[str, SyncStateEntry]] = Field(
-        default_factory=dict, description="cast-id -> peer -> baseline"
+        default_factory=dict, description="id -> peer -> baseline"
     )
 
 
 class CastFrontMatter(TypedDict, total=False):
-    """Parsed front matter fields (cast-* only)."""
+    """Parsed front matter fields relevant to Cast metadata."""
 
-    cast_id: str | None
+    id: str | None
     cast_hsync: list[str] | None
     cast_vaults: list[str] | None  # Legacy field for migration
     cast_codebases: list[str] | None
-    cast_version: int | None

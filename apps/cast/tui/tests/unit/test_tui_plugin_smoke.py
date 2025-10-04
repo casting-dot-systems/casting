@@ -10,7 +10,7 @@ def _write_cast(root: Path):
     (root / "Cast").mkdir(parents=True, exist_ok=True)
     y = ruamel.yaml.YAML()
     y.dump(
-        {"cast-version": 1, "cast-id": "00000000-0000-4000-8000-000000000000", "cast-name": "Smoke"},
+        {"id": "00000000-0000-4000-8000-000000000000", "cast-name": "Smoke"},
         (root / ".cast" / "config.yaml").open("w", encoding="utf-8"),
     )
 

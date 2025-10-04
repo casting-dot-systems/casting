@@ -22,21 +22,21 @@ class EphemeralIndex:
     def __init__(self, vault_path: Path):
         self.vault_path = vault_path
         self.by_id: dict[str, FileRec] = {}
-        self.by_path: dict[str, str] = {}  # relpath -> cast_id
+        self.by_path: dict[str, str] = {}  # relpath -> id
 
     def add_file(self, rec: FileRec) -> None:
         """Add a file record to the index."""
-        self.by_id[rec["cast_id"]] = rec
-        self.by_path[rec["relpath"]] = rec["cast_id"]
+        self.by_id[rec["id"]] = rec
+        self.by_path[rec["relpath"]] = rec["id"]
 
-    def get_by_id(self, cast_id: str) -> FileRec | None:
-        """Get file record by cast-id."""
-        return self.by_id.get(cast_id)
+    def get_by_id(self, identifier: str) -> FileRec | None:
+        """Get file record by id."""
+        return self.by_id.get(identifier)
 
     def get_by_path(self, relpath: str) -> FileRec | None:
         """Get file record by relative path."""
-        cast_id = self.by_path.get(relpath)
-        return self.by_id.get(cast_id) if cast_id else None
+        identifier = self.by_path.get(relpath)
+        return self.by_id.get(identifier) if identifier else None
 
     def all_peers(self) -> set[str]:
         """Get all unique peer names referenced."""
@@ -62,8 +62,8 @@ def build_ephemeral_index(
     Args:
         root_path: Path to Cast root (contains .cast/)
         vault_path: Path to cast folder
-        fixup: Whether to fix missing cast-id and reorder fields
-        limit_file: Optional cast-id or relpath to limit indexing to one file
+        fixup: Whether to fix missing id and reorder fields
+        limit_file: Optional id or relpath to limit indexing to one file
 
     Returns:
         EphemeralIndex instance
@@ -97,7 +97,7 @@ def build_ephemeral_index(
                 break
 
         if not md_files:
-            # Maybe limit_file was a cast-id; scan all and resolve by id below.
+            # Maybe limit_file was an id; scan all and resolve by id below.
             md_files = list(vault_path.rglob("*.md"))
     else:
         md_files = list(vault_path.rglob("*.md"))
@@ -147,12 +147,16 @@ def build_ephemeral_index(
                     write_cast_file(md_path, front_matter, body, reorder=True)
                     logger.info(f"Fixed cast fields/order in {md_path}")
 
-            if not front_matter or "cast-id" not in front_matter:
+            identifier = None
+            if front_matter:
+                identifier = front_matter.get("id")
+
+            if not front_matter or not identifier:
                 continue
 
             # Extract cast fields
             cast_fields = extract_cast_fields(front_matter)
-            cast_id = cast_fields.get("cast-id", "")
+            file_id = cast_fields.get("id") or identifier
 
             # Parse hsync entries
             hsync_entries = cast_fields.get("cast-hsync") or cast_fields.get("cast-vaults", [])
@@ -169,7 +173,7 @@ def build_ephemeral_index(
             # Create record
             relpath = str(md_path.relative_to(vault_path))
             rec: FileRec = {
-                "cast_id": cast_id,
+                "id": file_id,
                 "relpath": relpath,
                 "digest": digest,
                 "peers": peers,
@@ -178,8 +182,8 @@ def build_ephemeral_index(
 
             index.add_file(rec)
 
-            # If we were looking for a specific file by cast-id
-            if limit_file and cast_id == limit_file:
+            # If we were looking for a specific file by id
+            if limit_file and file_id == limit_file:
                 break
 
         except Exception as e:

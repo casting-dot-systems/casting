@@ -1,6 +1,6 @@
 """Tests for the new YAML ordering and canonicalization."""
 
-from casting.cast.core.yamlio import reorder_cast_fields
+from casting.cast.core.yamlio import ensure_cast_fields, reorder_cast_fields
 
 def test_reorder_groups_and_positions():
     fm = {
@@ -8,8 +8,7 @@ def test_reorder_groups_and_positions():
         "cast-zzz": "z",
         "last-updated": "2025-09-01T10:00:00-07:00",
         "foo": 1,
-        "cast-version": 3,
-        "cast-id": "abc-123",
+        "id": "abc-123",
         "cast-hsync": ["B (watch)", "A (live)", "B (watch)"],
         "cast-codebases": ["core", "core", "alpha"],
     }
@@ -20,23 +19,21 @@ def test_reorder_groups_and_positions():
     # 1) last-updated first
     assert keys[0] == "last-updated"
 
-    # 2) cast-id immediately after
-    assert keys[1] == "cast-id"
+    # 2) id immediately after
+    assert keys[1] == "id"
 
     # Collect cast-* block
     cast_block = [k for k in keys if k.startswith("cast-")]
 
-    # 3) Ensure cast-version is last within cast-* block
-    assert cast_block[-1] == "cast-version"
-
-    # 4) Ensure other cast-* keys (including unknown) are between id and version
+    # 3) Ensure cast-* keys sorted alphabetically after known keys
     assert "cast-hsync" in cast_block
     assert "cast-codebases" in cast_block
     assert "cast-zzz" in cast_block
-    assert cast_block.index("cast-id") < cast_block.index("cast-zzz") < cast_block.index("cast-version")
+    assert cast_block.index("cast-hsync") < cast_block.index("cast-codebases") < cast_block.index("cast-zzz")
 
-    # 5) Non-cast fields follow after the cast block
-    tail = keys[keys.index("cast-version") + 1 :]
+    # 4) Non-cast fields follow after the cast block
+    tail_start = 2 + len(cast_block)
+    tail = keys[tail_start:]
     assert "title" in tail and "foo" in tail
 
     # Canonicalization of lists
@@ -70,10 +67,9 @@ def test_reorder_no_cast_fields():
 def test_reorder_known_cast_keys_ordering():
     """Test that known cast keys appear in the correct order."""
     fm = {
-        "cast-version": 1,
         "cast-codebases": ["beta", "alpha"],
         "cast-hsync": ["Z (watch)", "A (live)"],
-        "cast-id": "test-id",
+        "id": "test-id",
         "last-updated": "2025-09-01T10:00:00-07:00",
     }
 
@@ -82,10 +78,9 @@ def test_reorder_known_cast_keys_ordering():
 
     expected_order = [
         "last-updated",
-        "cast-id",
+        "id",
         "cast-hsync",      # known key
         "cast-codebases",  # known key
-        "cast-version"
     ]
 
     assert keys == expected_order
@@ -94,10 +89,9 @@ def test_reorder_known_cast_keys_ordering():
 def test_reorder_unknown_cast_keys():
     """Test that unknown cast-* keys are sorted alphabetically between known keys and cast-version."""
     fm = {
-        "cast-version": 1,
         "cast-zebra": "z",
         "cast-apple": "a",
-        "cast-id": "test-id",
+        "id": "test-id",
         "last-updated": "2025-09-01T10:00:00-07:00",
         "cast-hsync": ["A (live)"],
     }
@@ -107,11 +101,10 @@ def test_reorder_unknown_cast_keys():
 
     expected_order = [
         "last-updated",
-        "cast-id",
+        "id",
         "cast-hsync",      # known key first
         "cast-apple",      # unknown keys alphabetically
         "cast-zebra",
-        "cast-version"     # version last
     ]
 
     assert keys == expected_order
@@ -121,9 +114,8 @@ def test_reorder_preserves_non_cast_field_order():
     """Test that non-cast fields maintain their original order."""
     fm = {
         "zebra": "z",
-        "cast-id": "test-id",
+        "id": "test-id",
         "apple": "a",
-        "cast-version": 1,
         "banana": "b",
         "last-updated": "2025-09-01T10:00:00-07:00",
     }
@@ -132,8 +124,7 @@ def test_reorder_preserves_non_cast_field_order():
 
     # Find where non-cast fields start (after cast-version)
     keys = list(out.keys())
-    version_index = keys.index("cast-version")
-    non_cast_fields = keys[version_index + 1:]
+    non_cast_fields = [k for k in keys if not (k == "last-updated" or k == "id" or k.startswith("cast-"))]
 
     # Should preserve original order: zebra, apple, banana
     expected_non_cast_order = ["zebra", "apple", "banana"]
@@ -143,9 +134,8 @@ def test_reorder_preserves_non_cast_field_order():
 def test_canonicalize_cast_hsync():
     """Test cast-hsync canonicalization."""
     fm = {
-        "cast-id": "test-id",
+        "id": "test-id",
         "cast-hsync": ["B (watch)", "A (live)", "B (live)", "A (watch)"],
-        "cast-version": 1,
     }
 
     out = reorder_cast_fields(fm)
@@ -157,12 +147,40 @@ def test_canonicalize_cast_hsync():
 def test_canonicalize_cast_codebases():
     """Test cast-codebases canonicalization."""
     fm = {
-        "cast-id": "test-id",
+        "id": "test-id",
         "cast-codebases": ["gamma", "alpha", "beta", "alpha"],
-        "cast-version": 1,
     }
 
     out = reorder_cast_fields(fm)
 
     # Should dedup and sort alphabetically
     assert out["cast-codebases"] == ["alpha", "beta", "gamma"]
+
+
+def test_ensure_cast_fields_generates_id_when_missing():
+    fm, modified = ensure_cast_fields({}, generate_id=True)
+
+    assert "id" in fm
+    assert fm["id"]
+    assert modified is True
+
+
+def test_ensure_cast_fields_replaces_empty_id():
+    fm, modified = ensure_cast_fields({"id": ""}, generate_id=True)
+
+    assert fm["id"]
+    assert modified is True
+
+
+def test_ensure_cast_fields_replaces_whitespace_id():
+    fm, modified = ensure_cast_fields({"id": "   "}, generate_id=True)
+
+    assert fm["id"]
+    assert modified is True
+
+
+def test_ensure_cast_fields_replaces_none_id():
+    fm, modified = ensure_cast_fields({"id": None}, generate_id=True)
+
+    assert fm["id"]
+    assert modified is True

@@ -14,7 +14,7 @@ def test_framework_smoke(tmp_path):
         cid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
         write_file(
             A.root / rel,
-            mk_note(cast_id=cid, title="Hello", body="Hi from A", peers=["Alpha", "Beta", "Gamma"]),
+            mk_note(note_id=cid, title="Hello", body="Hi from A", peers=["Alpha", "Beta", "Gamma"]),
         )
 
         # Sync from A; B and C should receive the note, baselines should be recorded
@@ -27,7 +27,7 @@ def test_framework_smoke(tmp_path):
         write_file(
             B.root / rel,
             mk_note(
-                cast_id=cid, title="Hello", body="Edited by B", peers=["Alpha", "Beta", "Gamma"]
+                note_id=cid, title="Hello", body="Edited by B", peers=["Alpha", "Beta", "Gamma"]
             ),
         )
         sb.hsync(A)  # A should pull B's change
@@ -38,7 +38,7 @@ def test_framework_smoke(tmp_path):
         write_file(
             A.root / watch_rel,
             mk_note(
-                cast_id="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                note_id="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                 title="Watch",
                 body="Watch-only",
                 peers=["Alpha", "Beta (watch)"],
@@ -52,7 +52,7 @@ def test_framework_smoke(tmp_path):
         write_file(
             A.root / keep_rel,
             mk_note(
-                cast_id="cccccccc-cccc-cccc-cccc-cccccccccccc",
+                note_id="cccccccc-cccc-cccc-cccc-cccccccccccc",
                 title="Keep",
                 body="Keep me",
                 peers=["Alpha", "Beta"],

@@ -3,7 +3,6 @@
 import difflib
 import os
 import re
-import shutil
 from enum import Enum
 from io import StringIO
 from pathlib import Path
@@ -29,7 +28,7 @@ class ConflictResolution(Enum):
 def handle_conflict(
     local_path: Path,
     peer_path: Path | None,
-    cast_id: str,
+    file_id: str,
     peer_name: str,
     cast_root: Path,
     interactive: bool = True,
@@ -42,7 +41,7 @@ def handle_conflict(
     Args:
         local_path: Path to local file
         peer_path: Path to peer file (if it exists)
-        cast_id: Cast ID of the file
+        file_id: ID of the file
         peer_name: Name of the peer cast
         cast_root: Root of the Cast (contains .cast/)
         interactive: Whether to prompt user
@@ -52,29 +51,6 @@ def handle_conflict(
     Returns:
         ConflictResolution choice
     """
-    # Create conflicts directory
-    conflicts_dir = cast_root / ".cast" / "conflicts"
-    conflicts_dir.mkdir(parents=True, exist_ok=True)
-
-    # Get title from filename
-    title = local_path.stem
-
-    # Write sidecar files
-    local_sidecar = conflicts_dir / f"{title}~{cast_id}~LOCAL.md"
-    peer_sidecar = conflicts_dir / f"{title}~{cast_id}~PEER-{peer_name}.md"
-
-    # Write local version (write even if empty string was provided)
-    if local_content is not None:
-        local_sidecar.write_text(local_content, encoding="utf-8")
-    elif local_path.exists():
-        shutil.copy2(local_path, local_sidecar)
-
-    # Write peer version (write even if empty string was provided)
-    if peer_content is not None:
-        peer_sidecar.write_text(peer_content, encoding="utf-8")
-    elif peer_path and peer_path.exists():
-        shutil.copy2(peer_path, peer_sidecar)
-
     # Preview (side-by-side) with YAML front matter awareness
     console = Console()
     # YAML instance for readable/ordered diffs (must exist before nested functions use it)
@@ -403,7 +379,6 @@ def handle_conflict(
         except Exception:
             rel = local_path.name
         console.print(f"[yellow]Conflict in {rel}: keeping LOCAL version[/yellow]")
-        console.print(f"  Conflict files saved to {conflicts_dir}")
         return ConflictResolution.KEEP_LOCAL
 
     # Interactive prompt

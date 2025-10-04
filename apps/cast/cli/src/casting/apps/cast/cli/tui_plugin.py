@@ -60,7 +60,7 @@ def _read_config(root: Path) -> tuple[str, Path]:
 
 @dataclass
 class FileItem:
-    cast_id: str | None
+    file_id: str | None
     relpath: str
     title: str | None
 
@@ -90,7 +90,7 @@ class CastContext:
                     title = fm.get("title") or fm.get("name")
             except Exception:
                 pass
-            items.append(FileItem(cast_id=rec["cast_id"], relpath=rec["relpath"], title=title))
+            items.append(FileItem(file_id=rec["id"], relpath=rec["relpath"], title=title))
 
         # include non-cast files for convenience
         try:
@@ -108,13 +108,13 @@ class CastContext:
                                     title = first_line[2:].strip()
                         except Exception:
                             pass
-                    items.append(FileItem(cast_id=None, relpath=relpath, title=title))
+                    items.append(FileItem(file_id=None, relpath=relpath, title=title))
         except Exception:
             pass
 
         items.sort(key=lambda it: it.relpath.lower())
         self.items = items
-        self._by_id = {it.cast_id: it for it in items if it.cast_id}
+        self._by_id = {it.file_id: it for it in items if it.file_id}
         self._by_path = {it.relpath: it for it in items}
 
     def resolve(self, token: str) -> Optional[FileItem]:
@@ -159,8 +159,8 @@ class CastFileCompleter(Completer):
         token, token_len = self._current_arg_token_and_len(document)
         for it in self.ctx.items:
             subtitle = f" — {it.title}" if it.title else ""
-            if it.cast_id:
-                disp = f"{it.relpath}{subtitle} · {it.cast_id[:8]}…"
+            if it.file_id:
+                disp = f"{it.relpath}{subtitle} · {it.file_id[:8]}…"
             else:
                 disp = f"{it.relpath}{subtitle}"
             insert = it.relpath
@@ -179,15 +179,15 @@ def _preview_file(console: Console, vault: Path, it: FileItem) -> None:
 
     tab = Table.grid(expand=True)
     tab.add_row(Text(str(path), style="bold"))
-    if it.cast_id:
-        tab.add_row(Text(f"cast-id: {it.cast_id}", style="dim"))
+    if it.file_id:
+        tab.add_row(Text(f"id: {it.file_id}", style="dim"))
     if it.title:
         tab.add_row(Text(f"title: {it.title}"))
     console.print(tab)
 
     fm, body, has_cast_yaml = parse_cast_file(path)
     if has_cast_yaml and isinstance(fm, dict):
-        sub = {k: fm.get(k) for k in ("last-updated", "cast-id", "cast-version", "url", "title") if k in fm}
+        sub = {k: fm.get(k) for k in ("last-updated", "id", "cast-hsync", "cast-codebases", "url", "title") if k in fm}
         if sub:
             try:
                 from io import StringIO
@@ -220,10 +220,10 @@ def _sync(console: Console, cctx: CastContext, file_token: Optional[str] = None,
     filt = None
     if file_token:
         it = cctx.resolve(file_token)
-        if it and it.cast_id:
-            filt = it.cast_id
-        elif it and not it.cast_id:
-            console.print(f"[yellow]Warning:[/yellow] '{file_token}' is not a Cast file (no cast-id). Syncing all files instead.")
+        if it and it.file_id:
+            filt = it.file_id
+        elif it and not it.file_id:
+            console.print(f"[yellow]Warning:[/yellow] '{file_token}' is not a Cast file (no id). Syncing all files instead.")
         else:
             filt = file_token
     code = hs.sync(

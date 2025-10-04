@@ -53,9 +53,9 @@ class ChromaStore:
 
     # ---------- Admin / utility ----------
 
-    def get_file_records(self, file_cast_id: str) -> Tuple[List[str], List[Dict[str, Any]]]:
-        """Return (ids, metadatas) for existing chunks of a given file cast-id."""
-        got = self.collection.get(where={"file_cast_id": file_cast_id}, include=["metadatas"])
+    def get_file_records(self, file_id: str) -> Tuple[List[str], List[Dict[str, Any]]]:
+        """Return (ids, metadatas) for existing chunks of a given file id."""
+        got = self.collection.get(where={"file_id": file_id}, include=["metadatas"])
         return got.get("ids", []), got.get("metadatas", [])
 
     def delete_ids(self, ids: Iterable[str]) -> None:
@@ -84,7 +84,7 @@ class ChromaStore:
 
         to_delete: List[str] = []
         for i, md in enumerate(metas):
-            fcid = (md or {}).get("file_cast_id")
+            fcid = (md or {}).get("file_id")
             if fcid and fcid not in valid_file_ids:
                 to_delete.append(ids[i])
         if to_delete:

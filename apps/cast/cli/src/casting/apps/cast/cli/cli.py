@@ -21,6 +21,7 @@ from casting.cast.core import (
 from casting.cast.core.filelock import cast_lock
 from casting.cast.sync import HorizontalSync, build_ephemeral_index
 from casting.cast.sync import CodebaseSync
+from casting.cast.core.scripts import ScriptContext, get_script, list_scripts
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
@@ -38,6 +39,50 @@ app = typer.Typer(help="Cast Sync - Synchronize Markdown files across local cast
 # codebase sub-app
 cb_app = typer.Typer(help="Manage Codebases (install/list/uninstall)")
 app.add_typer(cb_app, name="codebase")
+# scripts sub-app
+scripts_app = typer.Typer(help="Run maintenance scripts across a Cast")
+app.add_typer(scripts_app, name="scripts")
+@scripts_app.command("list")
+def scripts_list() -> None:
+    scripts = list_scripts()
+    if not scripts:
+        console.print("[yellow]No scripts available[/yellow]")
+        return
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Slug")
+    table.add_column("Description")
+    for script in scripts:
+        table.add_row(script.slug, script.description)
+    console.print(table)
+
+
+@scripts_app.command("execute")
+def scripts_execute(
+    slug: str = typer.Argument(..., help="Script slug to execute"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would change without writing"),
+) -> None:
+    script = get_script(slug)
+    if not script:
+        console.print(f"[red]Unknown script:[/red] {slug}")
+        raise typer.Exit(2)
+
+    root = get_current_root()
+    ctx = ScriptContext(root=root, dry_run=dry_run)
+    console.print(f"[cyan]Running script[/cyan] [bold]{script.slug}[/bold] (dry_run={dry_run})")
+    try:
+        result = script.run(ctx)
+    except Exception as exc:  # pragma: no cover - surfaced to user
+        console.print(f"[red]Script failed:[/red] {exc}")
+        raise typer.Exit(2) from exc
+
+    console.print(
+        f"Updated files: [bold]{result.updated_files}[/bold]  |  "
+        f"Config updated: [bold]{'yes' if result.updated_config else 'no'}[/bold]  |  "
+        f"Conflicts removed: [bold]{'yes' if result.removed_conflicts else 'no'}[/bold]"
+    )
+    for line in result.summary_lines():
+        console.print(f"  • {line}")
+
 # Subcommands (e.g., gdoc) get added at bottom to avoid circular imports.
 console = Console()
 yaml = YAML()
@@ -134,7 +179,7 @@ def list_cmd(
         if json_out:
             payload = {
                 "casts": [
-                    {"cast_id": e.cast_id, "name": e.name, "root": str(e.root)}
+                    {"id": e.id, "name": e.name, "root": str(e.root)}
                     for e in entries
                 ]
             }
@@ -152,7 +197,7 @@ def list_cmd(
                 for e in entries:
                     row = [e.name]
                     if show_ids:
-                        row.append(e.cast_id)
+                        row.append(e.id)
                     row.extend([str(e.root)])
                     table.add_row(*row)
                 console.print(table)
@@ -188,8 +233,7 @@ def init(
 
     # Create config
     config = {
-        "cast-version": 1,
-        "cast-id": str(uuid.uuid4()),
+        "id": str(uuid.uuid4()),
         "cast-name": name,
     }
 
@@ -229,7 +273,7 @@ def uninstall(
     """Uninstall (unregister) a Cast from the machine registry."""
     try:
         # Try by id
-        removed = unregister_cast(cast_id=identifier)
+        removed = unregister_cast(id=identifier)
         if not removed:
             # Try by name
             removed = unregister_cast(name=identifier)
@@ -244,7 +288,7 @@ def uninstall(
             raise typer.Exit(2)
 
         console.print(
-            f"[green][OK][/green] Uninstalled cast: [bold]{removed.name}[/bold] (id={removed.cast_id})\n  root: {removed.root}"
+            f"[green][OK][/green] Uninstalled cast: [bold]{removed.name}[/bold] (id={removed.id})\n  root: {removed.root}"
         )
     except Exception as e:
         console.print(f"[red]Uninstall failed:[/red] {e}")
@@ -253,7 +297,7 @@ def uninstall(
 
 @app.command()
 def hsync(
-    file: str | None = typer.Option(None, "--file", help="Sync only this file (cast-id or path)"),
+    file: str | None = typer.Option(None, "--file", help="Sync only this file (id or path)"),
     peer: list[str] | None = typer.Option(None, "--peer", help="Sync only with these peers"),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Show what would be done without doing it"
@@ -435,8 +479,8 @@ def doctor():
             with open(config_path, encoding="utf-8") as f:
                 config = yaml.load(f)
 
-            if not config.get("cast-id"):
-                issues.append("cast-id missing in config.yaml")
+            if not config.get("id"):
+                issues.append("id missing in config.yaml")
             if not config.get("cast-name"):
                 issues.append("cast-name missing in config.yaml")
 
@@ -452,7 +496,7 @@ def doctor():
             try:
                 entries = list_casts()
                 installed = any(
-                    e.cast_id == config.get("cast-id") and e.root == root for e in entries
+                    e.id == config.get("id") and e.root == root for e in entries
                 )
                 if not installed:
                     warnings.append(
@@ -540,10 +584,10 @@ def report():
             "file_list": [],
         }
 
-        for cast_id, rec in index.by_id.items():
+        for file_id, rec in index.by_id.items():
             report["file_list"].append(
                 {
-                    "cast_id": cast_id,
+                    "id": file_id,
                     "path": rec["relpath"],
                     "peers": rec["peers"],
                     "codebases": rec["codebases"],
@@ -562,7 +606,7 @@ def report():
 def index(
     file: str | None = typer.Option(
         None, "--file", "-f",
-        help="Normalize a single file (cast-id or path). Omit to process all Markdown under ./Cast."
+        help="Normalize a single file (id or path). Omit to process all Markdown under ./Cast."
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be updated without writing"),
 ):
@@ -571,8 +615,8 @@ def index(
 
     For each *.md in ./Cast:
       • Add YAML front‑matter if missing.
-      • Ensure 'last-updated', 'cast-id', 'cast-version'.
-      • Reorder YAML to: last-updated, cast-id, (other cast-*), cast-version, then other fields.
+      • Ensure 'last-updated' and 'id'.
+      • Reorder YAML to: last-updated, id, then other cast-* fields, followed by remaining fields.
     Does not change the Markdown body. Safe & idempotent.
     """
     try:
@@ -598,18 +642,18 @@ def index(
                 if cand.exists() and cand.is_file():
                     targets = [cand]
                 else:
-                    # search by cast-id (best effort)
+                    # search by id (best effort)
                     found = None
                     for md in vault_path.rglob("*.md"):
                         try:
                             fm, _body, has = parse_cast_file(md)
-                            if has and isinstance(fm, dict) and str(fm.get("cast-id")) == file:
+                            if has and isinstance(fm, dict) and str(fm.get("id")) == file:
                                 found = md
                                 break
                         except Exception:
                             continue
                     if not found:
-                        console.print(f"[red]No file matched[/red] '{file}' (path or cast-id).")
+                        console.print(f"[red]No file matched[/red] '{file}' (path or id).")
                         raise typer.Exit(2)
                     targets = [found]
         else:
@@ -638,7 +682,7 @@ def index(
                         # No YAML at all → create minimal Cast FM
                         fm = {}
                         fm, _ = ensure_cast_fields(fm, generate_id=True)
-                        actions.append("create_fm+cast_id+version+last-updated")
+                        actions.append("create_fm+id+last-updated")
                         created += 1
                     else:
                         # Ensure required Cast fields exist
@@ -798,8 +842,7 @@ def cb_init(
         # Create config.yaml (standard keys + explicit kind)
         import uuid as _uuid
         config = {
-            "cast-version": 1,
-            "cast-id": str(_uuid.uuid4()),
+            "id": str(_uuid.uuid4()),
             "cast-name": name,
             "cast-kind": "codebase",
         }
@@ -850,7 +893,7 @@ Files in this directory will be synchronized with other Casts using `cast cbsync
 @app.command()
 def cbsync(
     codebase: str | None = typer.Argument(None, help="Codebase name (registered). Omit when running inside a codebase to sync outward."),
-    file: str | None = typer.Option(None, "--file", help="Sync only this cast-id or path"),
+    file: str | None = typer.Option(None, "--file", help="Sync only this id or path"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Plan only"),
     non_interactive: bool = typer.Option(False, "--non-interactive", help="Resolve conflicts with KEEP_LOCAL"),
     debug: bool = typer.Option(False, "--debug", help="Show an execution plan"),

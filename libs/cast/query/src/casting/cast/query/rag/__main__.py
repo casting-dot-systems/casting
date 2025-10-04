@@ -27,7 +27,7 @@ def main():
     elif args.cmd == "search":
         hits = search(args.query, top_k=args.top_k)
         for i, h in enumerate(hits, 1):
-            print(f"\n[{i}] score={h.score:.3f} {h.metadata.get('relpath')} (cast-id={h.metadata.get('file_cast_id')})")
+            print(f"\n[{i}] score={h.score:.3f} {h.metadata.get('relpath')} (id={h.metadata.get('file_id')})")
             print(h.text[:500].strip().replace("\n", " ") + ("…" if len(h.text) > 500 else ""))
 
 
