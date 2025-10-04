@@ -100,3 +100,5 @@ credentials/
 orgs/*
 llmgine/*
 .py
+/Users/nathan/dev/cast/casting-systems/apps/cast/cli/tests
+unwatch-list

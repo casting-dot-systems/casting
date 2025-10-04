@@ -5,8 +5,8 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-from app.db import Base
-from app import models  # noqa: F401
+from identity_server.db import Base
+from identity_server import models  # noqa: F401
 
 
 # this is the Alembic Config object, which provides

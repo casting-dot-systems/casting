@@ -13,10 +13,14 @@ default-groups = ["dev"]
 # Include general libs and apps; *exclude* orgs
 members = [
     "llmgine",
-    "apps/*"
+    "apps/*",
+    "libs/members",
+    "libs/cast/*",
+    "apps/identity/identity-server"
 ]
 exclude = [
     "orgs/*",
+    "apps/brain",
     "apps/identity",
     "apps/cast",
     "libs/brain",
@@ -29,22 +33,8 @@ exclude = [
 # satisfy them from the workspace (editable).
 [tool.uv.sources]
 llmgine = { workspace = true }
-casting-core = { workspace = true }
-casting-discord-framework = { workspace = true }
-casting-discord-processing = { workspace = true }
-casting-notion = { workspace = true }
-casting-obsidian = { workspace = true }
-casting-gcal = { workspace = true }
-cast-core = { workspace = true }
-cast-sync = { workspace = true }
 cast-query = { workspace = true}
-cast-git = { workspace = true }
-cast-server = { workspace = true }
-cast-discord = { workspace = true }
-cast-cli = { workspace = true }
-cast-tui = { workspace = true }
-casting-identity = { workspace = true }
-identity-app = { workspace = true }
+
 
 [dependency-groups]
 cast-query = [
@@ -61,9 +51,7 @@ dev = [
   "httpx>=0.27",
   "poethepoet>=0.31.0",
   "ruamel.yaml>=0.18.0",
-  "typer>=0.12.0",
-  "cast-cli",
-  "cast-tui",
+  "typer>=0.12.0"
 ]
 
 [tool.ruff]
@@ -88,8 +76,7 @@ known-first-party = ["casting", "casting_org"]
 include = [
     "apps",
     "libs",
-    "llmgine",
-    "tests"
+    "llmgine"
 ]
 exclude = [
     "**/__pycache__",
