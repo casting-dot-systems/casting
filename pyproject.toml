@@ -13,7 +13,7 @@ default-groups = ["dev"]
 # Include general libs and apps; *exclude* orgs
 members = [
     "llmgine",
-    "apps/*",
+    "apps/cast/*",
     "libs/members",
     "libs/cast/*",
     "apps/identity/identity-server"
@@ -22,7 +22,7 @@ exclude = [
     "orgs/*",
     "apps/brain",
     "apps/identity",
-    "apps/cast",
+    "apps/cast/",
     "libs/brain",
     "libs/brain/*",
     "libs/cast",

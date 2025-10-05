@@ -29,6 +29,8 @@
         "libs/cast/core/src/casting/cast/core/filelock.py",
         "libs/cast/core/src/casting/cast/core/models.py",
         "libs/cast/core/src/casting/cast/core/registry.py",
+        "libs/cast/core/src/casting/cast/core/scripts/__init__.py",
+        "libs/cast/core/src/casting/cast/core/scripts/rename_identifiers.py",
         "libs/cast/core/src/casting/cast/core/yamlio.py",
         "libs/cast/core/tests/__init__.py",
         "libs/cast/core/tests/unit/__init__.py",
