@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, Sequence
 
@@ -38,7 +37,7 @@ class PromptRequestCommand(Command):
     timeout_sec: int = 60
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class SendMessageCommand(Command):
     """Engine → adapter: send a message to a Discord channel."""
 
@@ -47,7 +46,7 @@ class SendMessageCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class EditMessageCommand(Command):
     channel_id: str
     message_id: str
@@ -55,14 +54,14 @@ class EditMessageCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class DeleteMessageCommand(Command):
     channel_id: str
     message_id: str
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class AddReactionCommand(Command):
     channel_id: str
     message_id: str
@@ -70,7 +69,7 @@ class AddReactionCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class RemoveReactionCommand(Command):
     channel_id: str
     message_id: str
@@ -79,7 +78,7 @@ class RemoveReactionCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class FetchChannelHistoryCommand(Command):
     channel_id: str
     limit: int = 50
@@ -88,7 +87,7 @@ class FetchChannelHistoryCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class FetchThreadMessagesCommand(Command):
     thread_id: str
     limit: int = 50
@@ -97,7 +96,7 @@ class FetchThreadMessagesCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class CreateThreadCommand(Command):
     channel_id: str
     name: str
@@ -106,7 +105,7 @@ class CreateThreadCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class AgentActionCommand(Command):
     """Engine → adapter request to execute a higher level action (e.g. modal)."""
 
@@ -114,7 +113,7 @@ class AgentActionCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class InteractionEvent(Event):
     """Adapter → engine: surface new Discord interactions to the engine."""
 
@@ -122,7 +121,7 @@ class InteractionEvent(Event):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class MessagesFetchedEvent(Event):
     channel_id: str
     messages: Sequence[MessageInfo]
@@ -130,28 +129,28 @@ class MessagesFetchedEvent(Event):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class MessageSentEvent(Event):
     message: MessageInfo
     channel_id: str
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class ActionResultEvent(Event):
     request: AgentActionRequest
     result: AgentActionResult
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class DiscordAPIErrorEvent(Event):
     operation: str
     detail: str
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class RespondToInteractionCommand(Command):
     token: str
     message: OutboundMessage
@@ -160,14 +159,14 @@ class RespondToInteractionCommand(Command):
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class DeferInteractionCommand(Command):
     token: str
     ephemeral: bool = False
     session_id: SessionID | None = None
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class EditInteractionResponseCommand(Command):
     token: str
     message: OutboundMessage

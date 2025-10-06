@@ -9,6 +9,9 @@ dependencies = [
     "llmgine",
 ]
 
+[project.scripts]
+discord-live-test = "casting.discord.framework.testing.runner:main"
+
 [project.entry-points."casting.plugins"]
 discord_framework = "casting.discord.framework:Plugin"
 

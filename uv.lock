@@ -12,6 +12,7 @@ members = [
     "cast-server",
     "cast-sync",
     "cast-tui",
+    "casting-discord-framework",
     "casting-workspace",
     "identity-server",
     "llmgine",
@@ -534,6 +535,23 @@ requires-dist = [
     { name = "rich", specifier = ">=13.0.0" },
 ]
 provides-extras = ["dev"]
+
+[[package]]
+name = "casting-discord-framework"
+version = "0.1.0"
+source = { editable = "libs/discord/framework" }
+dependencies = [
+    { name = "discord-py" },
+    { name = "llmgine" },
+    { name = "python-dotenv" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "discord-py", specifier = ">=2.4.0" },
+    { name = "llmgine", editable = "llmgine" },
+    { name = "python-dotenv", specifier = ">=1.0.1" },
+]
 
 [[package]]
 name = "casting-workspace"

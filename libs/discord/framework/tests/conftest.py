@@ -7,3 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[4]
+LLMGINE_SRC = WORKSPACE_ROOT / "llmgine" / "src"
+if str(LLMGINE_SRC) not in sys.path:
+    sys.path.insert(0, str(LLMGINE_SRC))

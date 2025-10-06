@@ -16,7 +16,8 @@ members = [
     "apps/cast/*",
     "libs/members",
     "libs/cast/*",
-    "apps/identity/identity-server"
+    "apps/identity/identity-server",
+    "libs/discord/framework",
 ]
 exclude = [
     "orgs/*",
@@ -26,7 +27,7 @@ exclude = [
     "libs/brain",
     "libs/brain/*",
     "libs/cast",
-    "libs/discord"
+    "libs/discord/processing",
     ]
 
 # Workspace-wide mapping: when a member depends on these names,
@@ -94,6 +95,9 @@ reportMissingTypeStubs = false
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
+markers = [
+    "live: requires external Discord environment",
+]
 
 [tool.poe.tasks]
 fmt = "ruff format"
