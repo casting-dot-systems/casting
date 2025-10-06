@@ -1,43 +1,36 @@
-import os
-from typing import List, Optional
+from typing import List
+
 import discord
 
-
-def get_discord_config():
-    """Get Discord bot configuration from environment"""
-    return {
-        "token": os.getenv("DISCORD_TOKEN"),
-        "prefix": os.getenv("DISCORD_COMMAND_PREFIX", "!"),
-        "allowed_channels": os.getenv("DISCORD_ALLOWED_CHANNELS", "").split(",")
-        if os.getenv("DISCORD_ALLOWED_CHANNELS")
-        else [],
-        "allowed_roles": os.getenv("DISCORD_ALLOWED_ROLES", "").split(",")
-        if os.getenv("DISCORD_ALLOWED_ROLES")
-        else [],
-    }
+from casting.apps.discord_bot.config import DiscordBotSettings
 
 
-def is_authorized(ctx, config: dict) -> bool:
-    """Check if user is authorized to use bot commands"""
-    # If no restrictions are set, allow everyone
-    if not config["allowed_channels"] and not config["allowed_roles"]:
+def get_discord_config() -> DiscordBotSettings:
+    """Return Discord bot settings backed by environment variables."""
+
+    return DiscordBotSettings()
+
+
+def is_authorized(ctx, settings: DiscordBotSettings) -> bool:
+    """Check if a user is authorized to use bot commands."""
+
+    if not settings.allowed_channels and not settings.allowed_roles:
         return True
 
-    # Check channel restrictions
-    if config["allowed_channels"] and str(ctx.channel.id) not in config["allowed_channels"]:
+    if settings.allowed_channels and str(ctx.channel.id) not in settings.allowed_channels:
         return False
 
-    # Check role restrictions
-    if config["allowed_roles"]:
+    if settings.allowed_roles:
         user_roles = [role.name for role in ctx.author.roles]
-        if not any(role in config["allowed_roles"] for role in user_roles):
+        if not any(role in settings.allowed_roles for role in user_roles):
             return False
 
     return True
 
 
 def format_response(response: dict, success_emoji: str = "✅", error_emoji: str = "❌") -> str:
-    """Format API response for Discord"""
+    """Format API response for Discord."""
+
     if not response.get("success", True):
         return f"{error_emoji} **Error:** {response.get('error', 'Unknown error')}"
 
@@ -48,19 +41,22 @@ def format_response(response: dict, success_emoji: str = "✅", error_emoji: str
 
 
 def truncate_text(text: str, max_length: int = 1900) -> str:
-    """Truncate text for Discord message limits"""
+    """Truncate text for Discord message limits."""
+
     if len(text) <= max_length:
         return text
     return text[:max_length] + "..."
 
 
 def format_code_block(text: str, language: str = "") -> str:
-    """Format text as Discord code block"""
+    """Format text as Discord code block."""
+
     return f"```{language}\n{truncate_text(text)}\n```"
 
 
 def format_git_log(commits: List[str]) -> str:
-    """Format git log for Discord display"""
+    """Format git log for Discord display."""
+
     if not commits:
         return "No commits found"
 
@@ -72,7 +68,8 @@ def format_git_log(commits: List[str]) -> str:
 
 
 def format_git_status(status_data: dict) -> str:
-    """Format git status for Discord display"""
+    """Format git status for Discord display."""
+
     if status_data.get("clean", False):
         return "✅ **Working tree clean**"
 
@@ -91,7 +88,8 @@ def format_git_status(status_data: dict) -> str:
 
 
 def format_branch_list(branches_data: dict) -> str:
-    """Format branch list for Discord display"""
+    """Format branch list for Discord display."""
+
     branches = branches_data.get("branches", [])
     current = branches_data.get("current_branch")
 

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "agent-hub.fullname" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "agent-hub.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "agent-hub.name" . }}
+    spec:
+      containers:
+        - name: agent-hub
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: CAST_ENV
+              value: {{ .Values.env.CAST_ENV | quote }}
+            - name: CAST_DATABASE_URL
+              value: {{ .Values.env.CAST_DATABASE_URL | quote }}
+            - name: CAST_REDIS_URL
+              value: {{ .Values.env.CAST_REDIS_URL | quote }}
+          resources:
+{{- toYaml .Values.resources | nindent 12 }}

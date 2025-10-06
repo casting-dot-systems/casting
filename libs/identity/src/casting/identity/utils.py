@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable, TypeVar
 
+from casting.platform.config import bootstrap_env, find_app_dir
 from sqlalchemy.engine import Connection, Engine
-from dotenv import load_dotenv
 
 
-load_dotenv()
+APP_DIR = find_app_dir(__file__)
+bootstrap_env(app_dir=APP_DIR)
 
 T = TypeVar("T")
 

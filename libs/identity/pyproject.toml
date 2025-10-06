@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Identity library for Casting Systems (maps external identities to catalog.members)"
 requires-python = ">=3.13"
 dependencies = [
+    "casting-config",
     "sqlalchemy>=2.0.40",
     "psycopg2-binary>=2.9.0",
 ]

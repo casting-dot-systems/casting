@@ -1,13 +1,16 @@
+from typing import Any, Dict, Optional
+
 import aiohttp
-import os
-from typing import Dict, Any, Optional
+
+from casting.apps.discord_bot.config import DiscordBotSettings
 
 
 class APIClient:
     """Client for interacting with the FastAPI backend"""
 
-    def __init__(self):
-        self.base_url = os.getenv("API_URL", "http://localhost:8000")
+    def __init__(self, settings: DiscordBotSettings | None = None):
+        self.settings = settings or DiscordBotSettings()
+        self.base_url = self.settings.api_url
         self.session = None
 
     async def get_session(self):

@@ -1,44 +1,44 @@
-# name: pr
+name: pr
 
-# on:
-#   pull_request:
-#     types:
-#       - opened
-#       - reopened
-#       - synchronize
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
 
-# jobs:
-#   quality-gate:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-#       - name: Setup uv
-#         uses: astral-sh/setup-uv@v5
-#         with:
-#           version: "0.5.14"
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
-#       - name: Sync workspace
-#         run: uv sync --all-extras --dev
+      - name: Sync workspace
+        run: uv sync --locked --group dev --group migrate --group pipeline
 
-#       - name: Fail on lockfile drift
-#         run: |
-#           if [[ -n "$(git status --porcelain uv.lock)" ]]; then
-#             echo "ERROR: uv.lock changed during sync."
-#             git diff uv.lock
-#             exit 1
-#           fi
+      - name: Fail on lockfile drift
+        run: |
+          if [[ -n "$(git status --porcelain uv.lock)" ]]; then
+            echo "ERROR: uv.lock changed during sync."
+            git diff uv.lock
+            exit 1
+          fi
 
-#       - name: Format check
-#         run: uv run poe "ci:fmt"
+      - name: Format check
+        run: uv run poe "ci:fmt"
 
-#       - name: Lint
-#         run: uv run poe "ci:lint"
+      - name: Lint
+        run: uv run poe "ci:lint"
 
-#       - name: Type check
-#         run: uv run poe "ci:check"
+      - name: Type check
+        run: uv run poe "ci:check"
 
-#       - name: Tests
-#         run: uv run poe "ci:test"
+      - name: Tests
+        run: uv run poe "ci:test"
 

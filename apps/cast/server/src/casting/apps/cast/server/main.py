@@ -1,9 +1,11 @@
+from casting.platform.config import bootstrap_env, find_app_dir
 from fastapi import FastAPI
-from dotenv import load_dotenv
-from .markdown import router as markdown_router
-from .git_ops import router as git_router
 
-load_dotenv()
+from .git_ops import router as git_router
+from .markdown import router as markdown_router
+
+APP_DIR = find_app_dir(__file__)
+bootstrap_env(app_dir=APP_DIR)
 
 app = FastAPI(title="Markdown File API", description="API for managing markdown files and git operations")
 

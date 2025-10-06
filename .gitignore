@@ -178,9 +178,12 @@ cython_debug/
 
 # Local environment files
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
+**/.env.local
+**/.env.*.local
+**/.env.test
+**/.env.secrets
+**/.env.secrets.local
 
 # Application specific
 *.db
@@ -199,5 +202,9 @@ credentials/
 
 orgs/*
 orgs
+!orgs/
+!orgs
+!orgs/casting-systems/
+!orgs/casting-systems/**
 llmgine/*
 llmgine

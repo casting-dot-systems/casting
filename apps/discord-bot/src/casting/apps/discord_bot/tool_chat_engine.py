@@ -6,6 +6,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Optional
 
+from casting.platform.config import bootstrap_env, find_app_dir
 from litellm import acompletion
 
 from casting.cast.query import cast_query
@@ -23,10 +24,6 @@ from llmgine.ui.cli.components import EngineResultComponent, ToolComponent, Tool
 from casting.discord.framework.protocol import PromptRequestCommand
 
 # Optional pydantic-ai support could be added here if needed
-
-from dotenv import load_dotenv
-
-load_dotenv(override=True)
 
 
 @dataclass

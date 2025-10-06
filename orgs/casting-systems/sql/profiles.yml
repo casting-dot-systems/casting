@@ -1,0 +1,11 @@
+casting_org:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: postgres
+      password: postgres
+      port: 5432
+      dbname: casting_dev
+      schema: analytics

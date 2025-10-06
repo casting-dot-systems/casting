@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    env_file:
+      - ../.env
+    command: uv run uvicorn casting_org.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../:/app
+      - ../../.venv:/app/.venv
+    depends_on:
+      - postgres
+      - redis
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  org-discord-bot:
+    build:
+      context: ../..
+      dockerfile: apps/discord-bot/Dockerfile
+    env_file:
+      - ../.env
+    depends_on:
+      - redis

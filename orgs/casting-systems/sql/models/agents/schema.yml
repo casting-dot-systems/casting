@@ -1,0 +1,21 @@
+version: 2
+
+sources:
+  - name: agent_ops
+    tables:
+      - name: agents
+      - name: agent_events
+
+models:
+  - name: agent_activity
+    columns:
+      - name: id
+        tests: [not_null, unique]
+      - name: org_id
+        tests: [not_null]
+  - name: agent_metrics
+    columns:
+      - name: agent_id
+        tests: [not_null, unique]
+      - name: total_events
+        tests: [not_null]

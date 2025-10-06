@@ -12,13 +12,12 @@ Auth precedence:
 
 from __future__ import annotations
 
-import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
-import dotenv
 
+from casting.platform.config import bootstrap_env, find_app_dir
 import typer
 from rich.console import Console
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
@@ -26,7 +25,8 @@ from ruamel.yaml import YAML
 
 from casting.cast.core.yamlio import write_cast_file, parse_cast_file, ensure_cast_fields
 
-dotenv.load_dotenv()
+APP_DIR = find_app_dir(__file__)
+bootstrap_env(app_dir=APP_DIR)
 
 gdoc_app = typer.Typer(help="Google Docs integration (create, add & pull)")
 console = Console()

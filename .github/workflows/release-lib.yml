@@ -1,0 +1,22 @@
+name: release-lib
+
+on:
+  push:
+    tags:
+      - 'lib/**/v*'
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Build distribution
+        run: uv build
+      - name: Publish distribution
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
+          UV_PUBLISH_URL: ${{ secrets.UV_PUBLISH_URL }}
+        run: uv publish --publish-url "${UV_PUBLISH_URL}" --token "${UV_PUBLISH_TOKEN}"

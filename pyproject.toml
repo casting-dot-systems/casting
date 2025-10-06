@@ -12,32 +12,24 @@ package = false
 default-groups = ["dev"]
 
 [tool.uv.workspace]
-# Include general libs and apps; *exclude* orgs
 members = [
     "llmgine",
-    "apps/cast/*",
-    "libs/members",
-    "libs/cast/*",
-    "apps/identity/identity-server",
+    "apps/discord-bot",
+    "libs/cast/query",
     "libs/discord/framework",
-    "apps/discord-bot"
+    "libs/platform/config",
 ]
 exclude = [
-    "orgs/*",
-    "apps/brain",
-    "apps/identity",
-    "apps/cast/",
-    "libs/brain",
-    "libs/brain/*",
-    "libs/cast",
-    "libs/discord/processing",
-    ]
+]
 
 # Workspace-wide mapping: when a member depends on these names,
 # satisfy them from the workspace (editable).
 [tool.uv.sources]
 llmgine = { workspace = true }
-cast-query = { workspace = true}
+casting-discord-framework = { workspace = true }
+cast-query = { workspace = true }
+discord-bot = { workspace = true }
+casting-config = { workspace = true }
 
 
 [dependency-groups]
@@ -56,6 +48,15 @@ dev = [
   "poethepoet>=0.31.0",
   "ruamel.yaml>=0.18.0",
   "typer>=0.12.0"
+]
+migrate = [
+  "alembic>=1.13",
+  "psycopg[binary]>=3.1"
+]
+pipeline = [
+  "dbt-core>=1.8",
+  "dbt-postgres>=1.8",
+  "sqlfluff>=3.0"
 ]
 
 [tool.ruff]

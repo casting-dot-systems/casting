@@ -4,6 +4,7 @@ version = "0.2.5"
 description = "CLI for Cast Sync"
 requires-python = ">=3.13"
 dependencies = [
+    "casting-config",
     "cast-core",
     "cast-sync",
     "cast-tui",
@@ -13,8 +14,7 @@ dependencies = [
     "prompt-toolkit>=3.0.43",
     "google-api-python-client>=2.131.0",
     "google-auth>=2.30.0",
-    "google-auth-oauthlib>=1.2.0",
-    "python-dotenv>=1.0.0"
+    "google-auth-oauthlib>=1.2.0"
 ]
 
 [project.scripts]

@@ -1,0 +1,29 @@
+name: release-app
+
+on:
+  push:
+    tags:
+      - 'app/**/v*'
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image
+        run: |
+          docker build \
+            -f orgs/casting-systems/Dockerfile \
+            -t ghcr.io/${{ github.repository_owner }}/casting-org:${{ github.ref_name }} \
+            orgs/casting-systems
+      - name: Push image
+        run: docker push ghcr.io/${{ github.repository_owner }}/casting-org:${{ github.ref_name }}
