@@ -30,7 +30,7 @@ def test_local_rename_propagates_without_cascade_and_updates_baseline(tmp_path):
 
         # References in B pointing to OLD path (will be rewritten on rename)
         write_file(B.root / B.vault_rel("Refs/wiki.md"), "see [[Notes/Old Name]]\n")
-        write_file(B.root / B.vault_rel("Refs/md.md"),   "[x](../Notes/Old%20Name.md)\n")
+        write_file(B.root / B.vault_rel("Refs/md.md"), "[x](../Notes/Old%20Name.md)\n")
 
         # Establish baseline
         sb.hsync(A)
@@ -133,11 +133,11 @@ def test_both_sides_rename_to_different_paths_creates_conflict(tmp_path):
         # Both sides rename to different paths
         (A.root / a_new_rel).parent.mkdir(parents=True, exist_ok=True)
         (A.root / original_rel).rename(A.root / a_new_rel)
-        
-        (B.root / b_new_rel).parent.mkdir(parents=True, exist_ok=True) 
+
+        (B.root / b_new_rel).parent.mkdir(parents=True, exist_ok=True)
         (B.root / original_rel).rename(B.root / b_new_rel)
 
-        # Sync should detect conflict 
+        # Sync should detect conflict
         res = sb.hsync(A, non_interactive=False, input="keep_local\n")
         # Should have exit code indicating conflict was handled
         assert res.exit_code in (0, 3)
@@ -145,11 +145,11 @@ def test_both_sides_rename_to_different_paths_creates_conflict(tmp_path):
 
 def test_local_only_rename_with_peer_missing_creates_on_peer(tmp_path):
     """
-    If local renames a file but peer is missing it (but not deleted), 
+    If local renames a file but peer is missing it (but not deleted),
     sync should create the file on peer at the new path.
     """
     with Sandbox(tmp_path) as sb:
-        A = sb.create_vault("A")  
+        A = sb.create_vault("A")
         B = sb.create_vault("B")
 
         cid = "eeeeeeee-9999-aaaa-bbbb-cccccccccccc"

@@ -44,6 +44,7 @@ def index_cast(
 def _get_store(db_path: Optional[Path] = None) -> ChromaStore:
     root, vault, cfg = _find_root_and_vault()
     import re
+
     safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", cfg.cast_name)
     name = f"cast_{safe_name}"
     return ChromaStore(root, name, db_path=db_path)
@@ -82,10 +83,7 @@ def answer(
             "note": "LiteLLM not available; returning top hits only.",
         }
 
-    ctx = "\n\n".join(
-        f"[{i+1}] {h.metadata.get('relpath')} — {h.text}"
-        for i, h in enumerate(hits)
-    )
+    ctx = "\n\n".join(f"[{i + 1}] {h.metadata.get('relpath')} — {h.text}" for i, h in enumerate(hits))
     prompt = (
         "You are a helpful assistant answering from a set of notes.\n\n"
         "Cite filenames in brackets when you use them, e.g. [Notes/Foo.md].\n\n"

@@ -20,7 +20,9 @@ class FakeBus:
     def __init__(self) -> None:
         self.events: list[object] = []
 
-    def register_command_handler(self, *_args, **_kwargs) -> None:  # pragma: no cover - registration not used in unit tests
+    def register_command_handler(
+        self, *_args, **_kwargs
+    ) -> None:  # pragma: no cover - registration not used in unit tests
         return None
 
     async def publish(self, event: object) -> None:

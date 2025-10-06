@@ -2,6 +2,7 @@
 
 from casting.cast.core.yamlio import ensure_cast_fields, reorder_cast_fields
 
+
 def test_reorder_groups_and_positions():
     fm = {
         "title": "Note",
@@ -38,7 +39,7 @@ def test_reorder_groups_and_positions():
 
     # Canonicalization of lists
     assert out["cast-hsync"] == ["A (live)", "B (watch)"]  # dedup + alpha by name, live preferred
-    assert out["cast-codebases"] == ["alpha", "core"]      # dedup + alpha
+    assert out["cast-codebases"] == ["alpha", "core"]  # dedup + alpha
 
 
 def test_reorder_empty_front_matter():
@@ -79,7 +80,7 @@ def test_reorder_known_cast_keys_ordering():
     expected_order = [
         "last-updated",
         "id",
-        "cast-hsync",      # known key
+        "cast-hsync",  # known key
         "cast-codebases",  # known key
     ]
 
@@ -102,8 +103,8 @@ def test_reorder_unknown_cast_keys():
     expected_order = [
         "last-updated",
         "id",
-        "cast-hsync",      # known key first
-        "cast-apple",      # unknown keys alphabetically
+        "cast-hsync",  # known key first
+        "cast-apple",  # unknown keys alphabetically
         "cast-zebra",
     ]
 

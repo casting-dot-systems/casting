@@ -5,6 +5,7 @@ import pandas as pd
 from notion_client import Client
 from dotenv import load_dotenv
 
+
 class NotionExtractor:
     """
     Notion data extractor that:
@@ -12,27 +13,27 @@ class NotionExtractor:
     - Transforms the data into a pandas DataFrame
     - Returns the processed data
     """
-    
+
     def __init__(self, api_key: str, database_id: str):
         """
         Initialize NotionExtractor with API key and database ID.
-        
+
         Args:
             api_key (str): Notion API key
             database_id (str): Notion database ID
         """
         if not api_key:
             raise ValueError("A Notion API Key must be provided in .env file")
-        
+
         if not database_id:
             raise ValueError("A Notion Database ID must be provided in .env file")
-            
+
         self.token = api_key
         self.database_id = database_id
         # Initialize Notion client
         self.client = Client(auth=self.token)
         self.logger = None
-    
+
     def fetch_user_data(self) -> List[Dict[str, Any]]:
         """
         Fetch raw pages from the Notion Committee database with pagination.
@@ -43,9 +44,7 @@ class NotionExtractor:
 
         while has_more:
             response = self.client.databases.query(
-                database_id=self.database_id,
-                page_size=77,
-                start_cursor=start_cursor
+                database_id=self.database_id, page_size=77, start_cursor=start_cursor
             )
 
             for page in response.get("results", []):
@@ -64,7 +63,7 @@ class NotionExtractor:
                     "linkedin": self._get_property_value(props.get("LinkedIn"), "url"),
                     "working_on": self._get_property_value(props.get("I'm Working On"), "rich_text"),
                     "workload": self._get_property_value(props.get("My Workload Is"), "select"),
-                    "last_edited_at": page.get("last_edited_time")
+                    "last_edited_at": page.get("last_edited_time"),
                 }
                 results.append(record)
 
@@ -72,7 +71,7 @@ class NotionExtractor:
             start_cursor = response.get("next_cursor")
 
         return results
-    
+
     def _get_property_value(self, prop: Dict[str, Any], prop_type: str) -> Any:
         """
         Extract the plain value from a Notion property.
@@ -123,20 +122,31 @@ class NotionExtractor:
                 self.logger.error(f"Error extracting {prop_type}: {e}")
 
         return ""
-    
+
     def transform_user_data(self, raw_data: List[Dict[str, Any]]) -> pd.DataFrame:
         """
         Convert raw record list into a DataFrame with metadata.
         """
         df = pd.DataFrame(raw_data)
         keep = [
-            "name", "role", "status", "team", "joined", "bio",
-            "email", "discord_tag", "facebook", "instagram", "linkedin",
-            "working_on", "workload", "last_edited_time"
+            "name",
+            "role",
+            "status",
+            "team",
+            "joined",
+            "bio",
+            "email",
+            "discord_tag",
+            "facebook",
+            "instagram",
+            "linkedin",
+            "working_on",
+            "workload",
+            "last_edited_time",
         ]
         df = df[keep]
         return df
-    
+
     def parse(self, input_path: Optional[str] = None) -> pd.DataFrame:
         """
         Fetch and transform data into a single DataFrame.

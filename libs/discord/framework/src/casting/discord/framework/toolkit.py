@@ -49,7 +49,9 @@ class DiscordToolset:
         result = await self._execute(cmd)
         return {"success": result}
 
-    async def remove_reaction(self, channel_id: str, message_id: str, emoji: str, user_id: str | None = None) -> dict[str, Any]:
+    async def remove_reaction(
+        self, channel_id: str, message_id: str, emoji: str, user_id: str | None = None
+    ) -> dict[str, Any]:
         cmd = RemoveReactionCommand(
             channel_id=channel_id,
             message_id=message_id,

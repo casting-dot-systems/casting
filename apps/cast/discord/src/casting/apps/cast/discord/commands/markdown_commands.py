@@ -3,6 +3,7 @@ import asyncio
 from discord.ext import commands
 from casting.apps.cast.discord.utils.helpers import format_response, format_code_block, truncate_text
 
+
 class MarkdownCommands(commands.Cog):
     """Markdown file operation commands for Discord bot"""
 
@@ -17,22 +18,22 @@ class MarkdownCommands(commands.Cog):
             return
 
         # Remove .md extension if provided (will be added by API)
-        if filename.endswith('.md'):
+        if filename.endswith(".md"):
             filename = filename[:-3]
 
         async with ctx.typing():
             response = await self.bot.api_client.create_markdown(filename, content)
 
         result_msg = format_response(response)
-        if response.get('success', True):
+        if response.get("success", True):
             # Check if file already existed
-            if response.get('file_existed', False):
+            if response.get("file_existed", False):
                 result_msg += f"\n📄 **File `{response.get('filename')}` already existed - content has been appended**"
             else:
                 result_msg += f"\n📎 **File created:** `{response.get('filename', filename + '.md')}`"
 
             if content:
-                action_text = "appended" if response.get('file_existed', False) else "added"
+                action_text = "appended" if response.get("file_existed", False) else "added"
                 result_msg += f"\n📝 **Content {action_text}:**\n{format_code_block(truncate_text(content, 500), 'md')}"
 
         await ctx.send(result_msg)
@@ -45,30 +46,30 @@ class MarkdownCommands(commands.Cog):
             return
 
         # Remove .md extension if provided
-        if filename.endswith('.md'):
+        if filename.endswith(".md"):
             filename = filename[:-3]
 
         async with ctx.typing():
             response = await self.bot.api_client.read_markdown(filename)
 
-        if not response.get('success', True):
-            if response.get('error') == 'file_not_found':
-                await ctx.send(f"📄❌ **File `{response.get('filename', filename + '.md')}` does not exist**\n\n💡 **Tip:** Use `/md-list` to see available files or `/md-create {filename}` to create it.")
+        if not response.get("success", True):
+            if response.get("error") == "file_not_found":
+                await ctx.send(
+                    f"📄❌ **File `{response.get('filename', filename + '.md')}` does not exist**\n\n💡 **Tip:** Use `/md-list` to see available files or `/md-create {filename}` to create it."
+                )
             else:
                 await ctx.send(format_response(response))
             return
 
-        content = response.get('content', '')
-        filename_display = response.get('filename', filename)
+        content = response.get("content", "")
+        filename_display = response.get("filename", filename)
 
         if not content:
             await ctx.send(f"📝 **File `{filename_display}` exists but is empty**")
             return
 
         embed = discord.Embed(
-            title=f"📝 {filename_display}",
-            description=format_code_block(content, 'md'),
-            color=discord.Color.blue()
+            title=f"📝 {filename_display}", description=format_code_block(content, "md"), color=discord.Color.blue()
         )
         embed.set_footer(text=f"File size: {len(content)} characters")
         await ctx.send(embed=embed)
@@ -81,16 +82,16 @@ class MarkdownCommands(commands.Cog):
             return
 
         # Remove .md extension if provided
-        if filename.endswith('.md'):
+        if filename.endswith(".md"):
             filename = filename[:-3]
 
         async with ctx.typing():
             response = await self.bot.api_client.update_markdown(filename, content)
 
         result_msg = format_response(response)
-        if response.get('success', True):
+        if response.get("success", True):
             # Check if file had to be created instead of updated
-            if not response.get('file_existed', True):
+            if not response.get("file_existed", True):
                 result_msg += f"\n⚠️ **Warning:** File `{response.get('filename')}` did not exist and was created"
                 result_msg += f"\n📎 **File created:** `{response.get('filename')}`"
             else:
@@ -108,29 +109,33 @@ class MarkdownCommands(commands.Cog):
             return
 
         # Remove .md extension if provided
-        if filename.endswith('.md'):
+        if filename.endswith(".md"):
             filename = filename[:-3]
 
         # Simple confirmation message
-        confirm_msg = await ctx.send(f"⚠️ **Are you sure you want to delete `{filename}.md`?**\n\nReact with ✅ to confirm or ❌ to cancel. (30s timeout)")
+        confirm_msg = await ctx.send(
+            f"⚠️ **Are you sure you want to delete `{filename}.md`?**\n\nReact with ✅ to confirm or ❌ to cancel. (30s timeout)"
+        )
 
         # Add reactions
-        await confirm_msg.add_reaction('✅')
-        await confirm_msg.add_reaction('❌')
+        await confirm_msg.add_reaction("✅")
+        await confirm_msg.add_reaction("❌")
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ['✅', '❌'] and reaction.message.id == confirm_msg.id
+            return user == ctx.author and str(reaction.emoji) in ["✅", "❌"] and reaction.message.id == confirm_msg.id
 
         try:
-            reaction, user = await self.bot.wait_for('reaction_add', timeout=30.0, check=check)
+            reaction, user = await self.bot.wait_for("reaction_add", timeout=30.0, check=check)
 
-            if str(reaction.emoji) == '✅':
+            if str(reaction.emoji) == "✅":
                 async with ctx.typing():
                     response = await self.bot.api_client.delete_markdown(filename)
 
-                if not response.get('success', True):
-                    if response.get('error') == 'file_not_found':
-                        await ctx.send(f"📄❌ **File `{response.get('filename', filename + '.md')}` does not exist**\n\n💡 **Tip:** Use `/md-list` to see available files.")
+                if not response.get("success", True):
+                    if response.get("error") == "file_not_found":
+                        await ctx.send(
+                            f"📄❌ **File `{response.get('filename', filename + '.md')}` does not exist**\n\n💡 **Tip:** Use `/md-list` to see available files."
+                        )
                     else:
                         await ctx.send(format_response(response))
                 else:
@@ -151,11 +156,11 @@ class MarkdownCommands(commands.Cog):
         async with ctx.typing():
             response = await self.bot.api_client.list_markdown()
 
-        if not response.get('success', True):
+        if not response.get("success", True):
             await ctx.send(format_response(response))
             return
 
-        files = response.get('files', [])
+        files = response.get("files", [])
         if not files:
             await ctx.send("📝 **No markdown files found**")
             return
@@ -164,11 +169,7 @@ class MarkdownCommands(commands.Cog):
         if len(files) > 20:
             file_list += f"\n*... and {len(files) - 20} more files*"
 
-        embed = discord.Embed(
-            title="📝 Markdown Files",
-            description=file_list,
-            color=discord.Color.green()
-        )
+        embed = discord.Embed(title="📝 Markdown Files", description=file_list, color=discord.Color.green())
         embed.set_footer(text=f"Total: {len(files)} files")
         await ctx.send(embed=embed)
 
@@ -180,28 +181,30 @@ class MarkdownCommands(commands.Cog):
             return
 
         # Remove .md extension if provided
-        if filename.endswith('.md'):
+        if filename.endswith(".md"):
             filename = filename[:-3]
 
         async with ctx.typing():
             # First read the existing content
             read_response = await self.bot.api_client.read_markdown(filename)
 
-            if not read_response.get('success', True):
-                if read_response.get('error') == 'file_not_found':
-                    await ctx.send(f"📄❌ **File `{read_response.get('filename', filename + '.md')}` does not exist**\n\n💡 **Tip:** Use `/md-create {filename}` to create it first, or use `/md-list` to see available files.")
+            if not read_response.get("success", True):
+                if read_response.get("error") == "file_not_found":
+                    await ctx.send(
+                        f"📄❌ **File `{read_response.get('filename', filename + '.md')}` does not exist**\n\n💡 **Tip:** Use `/md-create {filename}` to create it first, or use `/md-list` to see available files."
+                    )
                 else:
                     await ctx.send(f"❌ **Cannot append to file:** {read_response.get('message', 'Unknown error')}")
                 return
 
-            existing_content = read_response.get('content', '')
+            existing_content = read_response.get("content", "")
             new_content = existing_content + "\n" + content if existing_content else content
 
             # Update with combined content
             update_response = await self.bot.api_client.update_markdown(filename, new_content)
 
         result_msg = format_response(update_response)
-        if update_response.get('success', True):
+        if update_response.get("success", True):
             result_msg += f"\n📝 **Appended content:**\n{format_code_block(truncate_text(content, 500), 'md')}"
 
         await ctx.send(result_msg)

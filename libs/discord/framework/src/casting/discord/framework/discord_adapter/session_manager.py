@@ -57,7 +57,13 @@ class SessionManager:
     async def create(self, origin: discord.Message) -> str:
         sid = self._gen_id()
         msg = await origin.reply(f"🔄 **Session {sid} starting...**")
-        self.active[sid] = Session(id=sid, author=origin.author, channel=origin.channel, status_msg=msg)
+        self.active[sid] = Session(
+            id=sid,
+            author=origin.author,
+            channel=origin.channel,
+            status_msg=msg,
+            data={"origin_message": origin},
+        )
         return sid
 
     async def update_status(self, sid: str, status: SessionStatus, text: str | None = None) -> None:
@@ -91,11 +97,15 @@ class SessionManager:
 
         if kind == "yes_no":
             view = YesNoView(timeout=timeout, original_author=session.author)
-            prompt_msg = await session.channel.send(content=f"⚠️ **Session {sid}**: {session.author.mention}, {prompt_text}", view=view)
+            prompt_msg = await session.channel.send(
+                content=f"⚠️ **Session {sid}**: {session.author.mention}, {prompt_text}", view=view
+            )
             await view.wait()
             await prompt_msg.edit(view=None)
             value = bool(view.value)
-            await self.update_status(sid, SessionStatus.INPUT_RECEIVED, "Input received" if view.value is not None else "Timed out")
+            await self.update_status(
+                sid, SessionStatus.INPUT_RECEIVED, "Input received" if view.value is not None else "Timed out"
+            )
             return value
 
         if kind == "text":

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import os
@@ -28,7 +27,8 @@ def db_engine():
     # We'll create tables that match the catalog schema structure
     with engine.connect() as conn:
         # Create catalog_members table
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE catalog_members (
                 member_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -36,10 +36,12 @@ def db_engine():
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
+        """)
+        )
 
         # Create catalog_meetings table
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE catalog_meetings (
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
@@ -48,10 +50,12 @@ def db_engine():
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
+        """)
+        )
 
         # Create catalog_projects table
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE TABLE catalog_projects (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -59,7 +63,8 @@ def db_engine():
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        """))
+        """)
+        )
 
         conn.commit()
 
@@ -87,6 +92,7 @@ def db_session(db_engine) -> Generator:
 @pytest.fixture
 def client(db_session) -> Generator:
     """Create a test client with database dependency override."""
+
     # Override dependency to use our test session
     def _get_db_for_test():
         try:

@@ -17,10 +17,7 @@ class DatabaseManager:
     """Manages database connections and sessions for brain-core."""
 
     def __init__(
-        self,
-        database_url: Optional[str] = None,
-        async_database_url: Optional[str] = None,
-        echo: bool = False
+        self, database_url: Optional[str] = None, async_database_url: Optional[str] = None, echo: bool = False
     ):
         """
         Initialize database manager.
@@ -45,9 +42,7 @@ class DatabaseManager:
         else:
             # Convert sync URL to async (postgresql -> postgresql+asyncpg)
             if self.database_url.startswith("postgresql://"):
-                self.async_database_url = self.database_url.replace(
-                    "postgresql://", "postgresql+asyncpg://", 1
-                )
+                self.async_database_url = self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
             else:
                 raise ValueError("Cannot automatically convert database URL to async format")
 
@@ -82,9 +77,7 @@ class DatabaseManager:
     def async_session_factory(self) -> async_sessionmaker:
         """Get or create asynchronous session factory."""
         if self._async_session_factory is None:
-            self._async_session_factory = async_sessionmaker(
-                bind=self.async_engine, expire_on_commit=False
-            )
+            self._async_session_factory = async_sessionmaker(bind=self.async_engine, expire_on_commit=False)
         return self._async_session_factory
 
     def create_session(self) -> Session:

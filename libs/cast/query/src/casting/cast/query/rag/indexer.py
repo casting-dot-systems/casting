@@ -56,6 +56,7 @@ def _find_cast_root_from_env() -> Tuple[Path, Path]:
 
 def _load_cast_config(root: Path) -> CastConfig:
     import ruamel.yaml
+
     y = ruamel.yaml.YAML()
     cfg_path = root / ".cast" / "config.yaml"
     data = y.load((cfg_path).read_text(encoding="utf-8"))
@@ -66,6 +67,7 @@ def _collection_name(cfg: CastConfig) -> str:
     # Unique per cast (cast-name is unique in your ecosystem); safe chars only.
     # Replace invalid chars for ChromaDB collection names
     import re
+
     safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", cfg.cast_name)
     return f"cast_{safe_name}"
 

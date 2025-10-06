@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from llmgine.bus.bus import MessageBus
+from llmgine.llm import SessionID
 from llmgine.messages.commands import CommandResult
 
 from .api import DiscordAgentAPI
@@ -50,17 +51,28 @@ class DiscordAgentRuntime:
         self._action_handler = handler
 
     def register(self, *, session_id: Any | None = None) -> None:
+        if session_id is None:
+            session_id = SessionID("BUS")
+
         self._bus.register_command_handler(SendMessageCommand, self._handle_send, session_id=session_id)
         self._bus.register_command_handler(EditMessageCommand, self._handle_edit, session_id=session_id)
         self._bus.register_command_handler(DeleteMessageCommand, self._handle_delete, session_id=session_id)
         self._bus.register_command_handler(AddReactionCommand, self._handle_add_reaction, session_id=session_id)
         self._bus.register_command_handler(RemoveReactionCommand, self._handle_remove_reaction, session_id=session_id)
-        self._bus.register_command_handler(FetchChannelHistoryCommand, self._handle_fetch_history, session_id=session_id)
+        self._bus.register_command_handler(
+            FetchChannelHistoryCommand, self._handle_fetch_history, session_id=session_id
+        )
         self._bus.register_command_handler(FetchThreadMessagesCommand, self._handle_fetch_thread, session_id=session_id)
         self._bus.register_command_handler(CreateThreadCommand, self._handle_create_thread, session_id=session_id)
-        self._bus.register_command_handler(RespondToInteractionCommand, self._handle_respond_to_interaction, session_id=session_id)
-        self._bus.register_command_handler(DeferInteractionCommand, self._handle_defer_interaction, session_id=session_id)
-        self._bus.register_command_handler(EditInteractionResponseCommand, self._handle_edit_interaction, session_id=session_id)
+        self._bus.register_command_handler(
+            RespondToInteractionCommand, self._handle_respond_to_interaction, session_id=session_id
+        )
+        self._bus.register_command_handler(
+            DeferInteractionCommand, self._handle_defer_interaction, session_id=session_id
+        )
+        self._bus.register_command_handler(
+            EditInteractionResponseCommand, self._handle_edit_interaction, session_id=session_id
+        )
         self._bus.register_command_handler(AgentActionCommand, self._handle_agent_action, session_id=session_id)
 
     async def _handle_send(self, cmd: SendMessageCommand) -> CommandResult:
@@ -191,12 +203,8 @@ class DiscordAgentRuntime:
                 await self._emit_error("agent_action", exc, session_id=cmd.session_id)
                 result = AgentActionResult(success=False, error=str(exc))
 
-        await self._bus.publish(
-            ActionResultEvent(request=cmd.request, result=result, session_id=cmd.session_id)
-        )
+        await self._bus.publish(ActionResultEvent(request=cmd.request, result=result, session_id=cmd.session_id))
         return CommandResult(success=result.success, result=result.data, error=result.error)
 
     async def _emit_error(self, operation: str, exc: Exception, *, session_id: Any | None) -> None:
-        await self._bus.publish(
-            DiscordAPIErrorEvent(operation=operation, detail=str(exc), session_id=session_id)
-        )
+        await self._bus.publish(DiscordAPIErrorEvent(operation=operation, detail=str(exc), session_id=session_id))

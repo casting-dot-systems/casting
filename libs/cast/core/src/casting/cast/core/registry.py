@@ -76,12 +76,15 @@ class CastEntry:
     def cast_path(self) -> Path:
         return self.root / "Cast"
 
+
 @dataclass
 class CodebaseEntry:
     """Registered codebase root; docs/cast is the sync mount."""
+
     name: str
     root: Path
     origin_cast: str | None = None  # single home cast for this codebase
+
     @property
     def docs_cast_path(self) -> Path:
         return self.root / "docs" / "cast"
@@ -171,9 +174,7 @@ def resolve_cast_by_name(name: str) -> CastEntry | None:
     return None
 
 
-def unregister_cast(
-    *, id: str | None = None, name: str | None = None, root: Path | None = None
-) -> CastEntry | None:
+def unregister_cast(*, id: str | None = None, name: str | None = None, root: Path | None = None) -> CastEntry | None:
     """
     Remove a Cast from the machine registry.
     You may specify by id, name, or root path.
@@ -208,6 +209,7 @@ def unregister_cast(
 
 # ---------------------- CODEBASE REGISTRY ----------------------
 
+
 def register_codebase(name: str, root: Path, origin_cast: str | None = None) -> CodebaseEntry:
     """
     Register/update a Codebase root in the machine registry.
@@ -225,7 +227,9 @@ def register_codebase(name: str, root: Path, origin_cast: str | None = None) -> 
         raise FileNotFoundError(f"Expected path not found: {doc_path} (create it and retry)")
     if not cast_config_path.exists():
         # Also require .cast directory in root for new structure
-        raise FileNotFoundError(f"Expected .cast directory not found: {cast_config_path} (run 'cast codebase init' first)")
+        raise FileNotFoundError(
+            f"Expected .cast directory not found: {cast_config_path} (run 'cast codebase init' first)"
+        )
 
     # If a cast is specified, make sure it's installed (best-effort validation).
     if origin_cast:
@@ -241,8 +245,8 @@ def register_codebase(name: str, root: Path, origin_cast: str | None = None) -> 
     # Remove any other entries that share the same name or root
     to_remove: list[str] = []
     for cb_name, data in list(reg["codebases"].items()):
-        same_name = (cb_name == name)
-        same_root = (Path(data.get("root", "")).resolve() == root)
+        same_name = cb_name == name
+        same_root = Path(data.get("root", "")).resolve() == root
         if same_name or same_root:
             to_remove.append(cb_name)
     for cb in to_remove:
@@ -255,27 +259,22 @@ def register_codebase(name: str, root: Path, origin_cast: str | None = None) -> 
     save_registry(reg)
     return CodebaseEntry(name=name, root=root, origin_cast=origin_cast)
 
+
 def list_codebases() -> list[CodebaseEntry]:
     reg = load_registry()
     out: list[CodebaseEntry] = []
     for name, data in reg.get("codebases", {}).items():
-        out.append(CodebaseEntry(
-            name=name,
-            root=Path(data.get("root", "")),
-            origin_cast=data.get("origin_cast")
-        ))
+        out.append(CodebaseEntry(name=name, root=Path(data.get("root", "")), origin_cast=data.get("origin_cast")))
     return out
+
 
 def resolve_codebase_by_name(name: str) -> CodebaseEntry | None:
     reg = load_registry()
     data = reg.get("codebases", {}).get(name)
     if not data:
         return None
-    return CodebaseEntry(
-        name=name,
-        root=Path(data.get("root", "")),
-        origin_cast=data.get("origin_cast")
-    )
+    return CodebaseEntry(name=name, root=Path(data.get("root", "")), origin_cast=data.get("origin_cast"))
+
 
 def unregister_codebase(*, name: str | None = None, root: Path | None = None) -> CodebaseEntry | None:
     """
@@ -299,8 +298,4 @@ def unregister_codebase(*, name: str | None = None, root: Path | None = None) ->
     payload = codebases.pop(target_name)
     reg["codebases"] = codebases
     save_registry(reg)
-    return CodebaseEntry(
-        name=target_name,
-        root=Path(payload.get("root", "")),
-        origin_cast=payload.get("origin_cast")
-    )
+    return CodebaseEntry(name=target_name, root=Path(payload.get("root", "")), origin_cast=payload.get("origin_cast"))

@@ -6,6 +6,7 @@ Supported link forms:
 
 We only rewrite if the link resolves to the exact old file path.
 """
+
 from __future__ import annotations
 
 import os
@@ -21,9 +22,7 @@ WIKI_LINK_RE = re.compile(
 
 # Markdown links/images: !?[text](url)
 # We don't treat images specially but keep the optional '!' so we can leave it untouched.
-MD_LINK_RE = re.compile(
-    r"(?P<img>!?)\[(?P<text>[^\]]*)\]\((?P<url>[^)]+)\)"
-)
+MD_LINK_RE = re.compile(r"(?P<img>!?)\[(?P<text>[^\]]*)\]\((?P<url>[^)]+)\)")
 
 _SAFE_URL_CHARS = "/-_.~()[]'@:+,;=&%!$*"
 

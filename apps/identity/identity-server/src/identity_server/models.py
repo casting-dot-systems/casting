@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import uuid
@@ -26,6 +25,7 @@ class GUID(TypeDecorator):
 
     Stores as CHAR(36) and returns `uuid.UUID` in Python.
     """
+
     impl = CHAR(36)
     cache_ok = True
 

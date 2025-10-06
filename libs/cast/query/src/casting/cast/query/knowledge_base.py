@@ -15,7 +15,7 @@ def _load_cast_folder() -> Path:
     cast_folder = os.getenv(CAST_FOLDER_ENV)
     if not cast_folder:
         raise RuntimeError(f"{CAST_FOLDER_ENV} environment variable not set")
-    cast_folder = '/Users/nathan/casts/casting-cast/Cast'
+    cast_folder = "/Users/nathan/casts/casting-cast/Cast"
     cast_path = Path(cast_folder)
     if not cast_path.exists():
         raise RuntimeError(f"Cast folder '{cast_folder}' does not exist")

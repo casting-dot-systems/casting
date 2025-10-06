@@ -26,9 +26,7 @@ def test_framework_smoke(tmp_path):
         # Modify in B, then PULL into A
         write_file(
             B.root / rel,
-            mk_note(
-                note_id=cid, title="Hello", body="Edited by B", peers=["Alpha", "Beta", "Gamma"]
-            ),
+            mk_note(note_id=cid, title="Hello", body="Edited by B", peers=["Alpha", "Beta", "Gamma"]),
         )
         sb.hsync(A)  # A should pull B's change
         assert read_file(A.root / rel) == read_file(B.root / rel)
@@ -59,9 +57,7 @@ def test_framework_smoke(tmp_path):
             ),
         )
         sb.hsync(A, file=str(watch_rel))  # only operate on watch.md
-        assert (A.root / keep_rel).exists(), (
-            "unrelated file must not be deleted during file-filtered sync"
-        )
+        assert (A.root / keep_rel).exists(), "unrelated file must not be deleted during file-filtered sync"
 
         # Report JSON sanity
         rep = sb.report_json(A)

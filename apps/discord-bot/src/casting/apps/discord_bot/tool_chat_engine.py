@@ -1,4 +1,5 @@
 import asyncio
+
 # pyright: reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownParameterType=false
 import json
 import uuid
@@ -26,6 +27,7 @@ from casting.discord.framework.protocol import PromptRequestCommand
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
+
 
 @dataclass
 class DarcyToolChatEngineCommand(Command):
@@ -108,9 +110,7 @@ class DarcyToolChatEngine:
         """Handle a chat command."""
         try:
             # Publish initial status
-            await self.bus.publish(
-                DarcyToolChatEngineStatusEvent(status="Processing", session_id=self.session_id)
-            )
+            await self.bus.publish(DarcyToolChatEngineStatusEvent(status="Processing", session_id=self.session_id))
 
             # 1. Add user message to chat history
             self.chat.add_user_message(getattr(command, "prompt", ""))
@@ -120,17 +120,12 @@ class DarcyToolChatEngine:
             tools = self.tool_manager.parse_tools_to_list()
 
             # 3. Call the LLM (litellm here; engines may also use pydantic-ai internally)
-            await self.bus.publish(
-                DarcyToolChatEngineStatusEvent(
-                    status="Calling LLM", session_id=self.session_id
-                )
-            )
+            await self.bus.publish(DarcyToolChatEngineStatusEvent(status="Calling LLM", session_id=self.session_id))
 
             print(f"Calling LLM with context: {current_context} and tools: {tools}")
 
             response = await acompletion(
-                model=self.model, messages=current_context, tools=tools if tools else None,
-                max_tokens=500
+                model=self.model, messages=current_context, tools=tools if tools else None, max_tokens=500
             )
 
             # 4. Extract the message from response
@@ -142,16 +137,12 @@ class DarcyToolChatEngine:
             # 5. Check for tool calls
             if hasattr(message, "tool_calls") and message.tool_calls:
                 await self.bus.publish(
-                    DarcyToolChatEngineStatusEvent(
-                        status="Executing tools", session_id=self.session_id
-                    )
+                    DarcyToolChatEngineStatusEvent(status="Executing tools", session_id=self.session_id)
                 )
 
                 # Convert litellm tool calls to our ToolCall format
                 tool_calls = [
-                    ToolCall(
-                        id=tc.id, name=tc.function.name or "", arguments=tc.function.arguments or ""
-                    )
+                    ToolCall(id=tc.id, name=tc.function.name or "", arguments=tc.function.arguments or "")
                     for tc in message.tool_calls
                 ]
 
@@ -181,9 +172,7 @@ class DarcyToolChatEngine:
                     self.chat.add_tool_message(tool_call_id=tool_call.id, content=str(result))
                     # Publish a UI-oriented event and an observability event
                     await self.bus.publish(
-                        ToolResultEvent(
-                            tool_name=tool_call.name, result=str(result), session_id=self.session_id
-                        )
+                        ToolResultEvent(tool_name=tool_call.name, result=str(result), session_id=self.session_id)
                     )
                     try:
                         tool_args_obj = (
@@ -208,48 +197,32 @@ class DarcyToolChatEngine:
 
                 # Get final response after tool execution
                 await self.bus.publish(
-                    DarcyToolChatEngineStatusEvent(
-                        status="Getting final response", session_id=self.session_id
-                    )
+                    DarcyToolChatEngineStatusEvent(status="Getting final response", session_id=self.session_id)
                 )
 
                 final_context = self.chat.get_messages()
-                final_response = await acompletion(
-                    model=self.model, messages=final_context
-                )
+                final_response = await acompletion(model=self.model, messages=final_context)
                 if final_response.choices and final_response.choices[0].message.content:
                     final_content = final_response.choices[0].message.content
                     self.chat.add_assistant_message(final_content)
 
                     await self.bus.publish(
-                        DarcyToolChatEngineStatusEvent(
-                            status="Finished", session_id=self.session_id
-                        )
+                        DarcyToolChatEngineStatusEvent(status="Finished", session_id=self.session_id)
                     )
                     return CommandResult(success=True, result=final_content)
                 # Fallback when no content is returned after tools
-                await self.bus.publish(
-                    DarcyToolChatEngineStatusEvent(
-                        status="Finished", session_id=self.session_id
-                    )
-                )
+                await self.bus.publish(DarcyToolChatEngineStatusEvent(status="Finished", session_id=self.session_id))
                 return CommandResult(success=True, result="Done.")
             else:
                 # No tool calls, just return the response
                 content = message.content or ""
                 self.chat.add_assistant_message(content)
 
-                await self.bus.publish(
-                    DarcyToolChatEngineStatusEvent(
-                        status="Finished", session_id=self.session_id
-                    )
-                )
+                await self.bus.publish(DarcyToolChatEngineStatusEvent(status="Finished", session_id=self.session_id))
                 return CommandResult(success=True, result=content)
 
         except Exception as e:
-            await self.bus.publish(
-                DarcyToolChatEngineStatusEvent(status="finished", session_id=self.session_id)
-            )
+            await self.bus.publish(DarcyToolChatEngineStatusEvent(status="finished", session_id=self.session_id))
             return CommandResult(success=False, error=str(e))
 
 

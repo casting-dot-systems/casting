@@ -23,6 +23,7 @@ def set_identity(
     Upsert an identity mapping for a member. If the (type, value) already
     exists, it will be reassigned to the provided member_id.
     """
+
     def _run(c: Connection) -> None:
         ensure_identity_table(c)
         c.execute(
@@ -40,12 +41,11 @@ def set_identity(
     with_connection(conn, _run)
 
 
-def list_identities(
-    conn: Connection | Engine, *, member_id: Optional[str] = None
-) -> List[Dict[str, Any]]:
+def list_identities(conn: Connection | Engine, *, member_id: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     List identities (optionally for a single member).
     """
+
     def _run(c: Connection) -> List[Dict[str, Any]]:
         ensure_identity_table(c)
 
@@ -86,11 +86,13 @@ def get_member_from_identity(
           "identities": [{"identity_type": "...", "identity_value": "..."}, ...]
         }
     """
+
     def _run(c: Connection) -> Optional[MemberWithIdentities]:
         ensure_identity_table(c)
-        row = c.execute(
-            text(
-                """
+        row = (
+            c.execute(
+                text(
+                    """
                 select m.*
                 from catalog.members m
                 join application.identity i
@@ -99,9 +101,12 @@ def get_member_from_identity(
                   and i.identity_value = :value
                 limit 1
                 """
-            ),
-            {"type": identity_type, "value": identity_value},
-        ).mappings().first()
+                ),
+                {"type": identity_type, "value": identity_value},
+            )
+            .mappings()
+            .first()
+        )
 
         if not row:
             return None
@@ -116,31 +121,39 @@ def _materialize_member_with_identities(
 ) -> MemberWithIdentities:
     """Helper to build a member with all identities."""
     if member_row is None:
-        member_row_result = c.execute(
-            text(
-                """
+        member_row_result = (
+            c.execute(
+                text(
+                    """
                 select *
                 from catalog.members
                 where member_id = :member_id
                 """
-            ),
-            {"member_id": member_id},
-        ).mappings().first()
+                ),
+                {"member_id": member_id},
+            )
+            .mappings()
+            .first()
+        )
         if not member_row_result:
             raise RuntimeError("member disappeared during read")
         member_row = dict(member_row_result)
 
-    identities = c.execute(
-        text(
-            """
+    identities = (
+        c.execute(
+            text(
+                """
             select identity_type, identity_value
             from application.identity
             where member_id = :member_id
             order by identity_type, identity_value
             """
-        ),
-        {"member_id": member_id},
-    ).mappings().all()
+            ),
+            {"member_id": member_id},
+        )
+        .mappings()
+        .all()
+    )
 
     return {
         "member": member_row,

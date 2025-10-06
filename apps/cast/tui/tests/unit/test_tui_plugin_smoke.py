@@ -5,6 +5,7 @@ import ruamel.yaml
 from casting.apps.cast.tui import TerminalApp, TerminalContext
 from casting.apps.cast.cli.tui_plugin import CastTUIPlugin
 
+
 def _write_cast(root: Path):
     (root / ".cast").mkdir(parents=True, exist_ok=True)
     (root / "Cast").mkdir(parents=True, exist_ok=True)
@@ -13,6 +14,7 @@ def _write_cast(root: Path):
         {"id": "00000000-0000-4000-8000-000000000000", "cast-name": "Smoke"},
         (root / ".cast" / "config.yaml").open("w", encoding="utf-8"),
     )
+
 
 def test_plugin_registers_commands(tmp_path, monkeypatch):
     _write_cast(tmp_path)

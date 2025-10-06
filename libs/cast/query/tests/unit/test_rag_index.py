@@ -27,13 +27,16 @@ def _mk_cast(tmp: Path) -> Path:
         "cast-location": "Cast",
     }
     from io import StringIO
+
     stream = StringIO()
     y.dump(cfg, stream)
     (tmp / ".cast" / "config.yaml").write_text(stream.getvalue(), encoding="utf-8")
     return tmp / "Cast"
 
 
-def _write_cast_note(vault: Path, rel: str, title: str, body: str, *, note_id: str | None = None, extra: dict | None = None):
+def _write_cast_note(
+    vault: Path, rel: str, title: str, body: str, *, note_id: str | None = None, extra: dict | None = None
+):
     p = vault / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     y = ruamel.yaml.YAML()
@@ -46,6 +49,7 @@ def _write_cast_note(vault: Path, rel: str, title: str, body: str, *, note_id: s
     if extra:
         fm.update(extra)
     from io import StringIO
+
     stream = StringIO()
     y.dump(fm, stream)
     front = stream.getvalue().strip()
@@ -64,7 +68,7 @@ def test_index_add_update_skip_rename_and_cleanup(tmp_path: Path):
 
     # First index build
     rep1 = build_or_update_index(embedder=FakeDeterministicEmbedding(), cleanup_orphans=True)
-    assert rep1.added == 2   # 'spec' skipped
+    assert rep1.added == 2  # 'spec' skipped
     assert rep1.updated == 0
     assert rep1.skipped in (0, 1)  # depending on chunking; ~0 here
     assert rep1.renamed_only == 0

@@ -99,9 +99,12 @@ def handle_conflict(
         return p.parent
 
     def _rel_or_name(base: Path | None, p: Path | None) -> str:
-        if base is None or p is None: return p.name if p else ""
-        try: return str(p.relative_to(base))
-        except Exception: return p.name
+        if base is None or p is None:
+            return p.name if p else ""
+        try:
+            return str(p.relative_to(base))
+        except Exception:
+            return p.name
 
     # Number of context lines to show around diffs (fold the rest).
     # Can be adjusted per-run via environment variable.
@@ -339,14 +342,17 @@ def handle_conflict(
         )
         legend.add_row(
             f"• File: [white]{local_rel}[/white]" + (f"  — title: [white]{local_title}[/white]" if local_title else ""),
-            ("• File: [white]" + (peer_rel or "(missing)") + "[/white]"
-             + (f"  — title: [white]{peer_title}[/white]" if peer_title else "")),
+            (
+                "• File: [white]"
+                + (peer_rel or "(missing)")
+                + "[/white]"
+                + (f"  — title: [white]{peer_title}[/white]" if peer_title else "")
+            ),
         )
+        legend.add_row("[red]Red[/red]: change/delete in LOCAL", "[green]Green[/green]: add/change in PEER")
         legend.add_row(
-            "[red]Red[/red]: change/delete in LOCAL", "[green]Green[/green]: add/change in PEER"
-        )
-        legend.add_row(
-            "[dim]Lines with changes have background highlights[/dim]", "[dim]Character changes are emphasized within lines[/dim]"
+            "[dim]Lines with changes have background highlights[/dim]",
+            "[dim]Character changes are emphasized within lines[/dim]",
         )
         console.print(Panel(legend, title="Diff legend", expand=True))
 
@@ -382,8 +388,8 @@ def handle_conflict(
         return ConflictResolution.KEEP_LOCAL
 
     # Interactive prompt
-    opt_local = f"Keep LOCAL (keep name/path: { _rel_or_name(local_vault_path, local_path) })"
-    opt_peer  = f"Keep PEER  (adopt name/path: { peer_rel or '(missing)'} )"
+    opt_local = f"Keep LOCAL (keep name/path: {_rel_or_name(local_vault_path, local_path)})"
+    opt_peer = f"Keep PEER  (adopt name/path: {peer_rel or '(missing)'} )"
     console.print(f"\nOptions:\n  1. {opt_local}\n  2. {opt_peer}\n  3. Skip (resolve later)")
 
     while True:

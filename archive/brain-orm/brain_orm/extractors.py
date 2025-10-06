@@ -102,13 +102,13 @@ class DiscordOrmExtractor:
                             component_type="thread",
                             name=thread.name,
                             parent_component_id=str(channel.id),
-                            is_active=not thread.archived if hasattr(thread, 'archived') else True,
+                            is_active=not thread.archived if hasattr(thread, "archived") else True,
                             raw_data={
                                 "discord_thread_id": thread.id,
                                 "parent_channel_id": channel.id,
                                 "created_at": thread.created_at.isoformat(),
-                                "archived": getattr(thread, 'archived', False),
-                                "auto_archive_duration": getattr(thread, 'auto_archive_duration', None),
+                                "archived": getattr(thread, "archived", False),
+                                "auto_archive_duration": getattr(thread, "auto_archive_duration", None),
                             },
                         )
                         synced_components.append(thread_component)
@@ -165,7 +165,9 @@ class DiscordOrmExtractor:
                             author_external_id=str(discord_message.author.id),
                             content=discord_message.content,
                             has_attachments=bool(discord_message.attachments),
-                            reply_to_message_id=str(discord_message.reference.message_id) if discord_message.reference else None,
+                            reply_to_message_id=str(discord_message.reference.message_id)
+                            if discord_message.reference
+                            else None,
                             created_at=discord_message.created_at,
                             edited_at=discord_message.edited_at,
                             raw_data={
@@ -227,7 +229,9 @@ class DiscordOrmExtractor:
                                 author_external_id=str(discord_message.author.id),
                                 content=discord_message.content,
                                 has_attachments=bool(discord_message.attachments),
-                                reply_to_message_id=str(discord_message.reference.message_id) if discord_message.reference else None,
+                                reply_to_message_id=str(discord_message.reference.message_id)
+                                if discord_message.reference
+                                else None,
                                 created_at=discord_message.created_at,
                                 edited_at=discord_message.edited_at,
                                 raw_data={
@@ -329,8 +333,8 @@ class DataFrameLoader:
         total_loaded = 0
 
         for i in range(0, len(df), batch_size):
-            batch_df = df.iloc[i:i + batch_size]
-            print(f"Loading batch {i//batch_size + 1}: {len(batch_df)} messages")
+            batch_df = df.iloc[i : i + batch_size]
+            print(f"Loading batch {i // batch_size + 1}: {len(batch_df)} messages")
 
             for _, row in batch_df.iterrows():
                 try:
@@ -351,7 +355,9 @@ class DataFrameLoader:
                         author_external_id=str(row["author_external_id"]),
                         content=row.get("content"),
                         has_attachments=bool(row.get("has_attachments", False)),
-                        reply_to_message_id=str(row["reply_to_message_id"]) if pd.notna(row.get("reply_to_message_id")) else None,
+                        reply_to_message_id=str(row["reply_to_message_id"])
+                        if pd.notna(row.get("reply_to_message_id"))
+                        else None,
                         created_at=pd.to_datetime(row["created_at_ts"]) if pd.notna(row.get("created_at_ts")) else None,
                         edited_at=pd.to_datetime(row["edited_at_ts"]) if pd.notna(row.get("edited_at_ts")) else None,
                     )

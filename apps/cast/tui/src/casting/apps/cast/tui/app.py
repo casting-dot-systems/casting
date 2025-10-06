@@ -15,9 +15,11 @@ from rich.console import Console
 
 # ------------------------- core data structures -------------------------
 
+
 @dataclass
 class Command:
     """A command registered in the terminal."""
+
     name: str
     handler: Callable[["TerminalContext", List[str]], None]
     description: str = ""
@@ -28,6 +30,7 @@ class Command:
 @dataclass
 class TerminalContext:
     """Runtime context passed to command handlers."""
+
     console: Console
     app: "TerminalApp"
     state: dict = field(default_factory=dict)
@@ -35,6 +38,7 @@ class TerminalContext:
 
 class Plugin(Protocol):
     """Plugins register commands, keybindings, completers, toolbars, etc."""
+
     def register(self, ctx: TerminalContext) -> None: ...
     # Optional hooks (not required)
     def bottom_toolbar(self, ctx: TerminalContext) -> HTML | str: ...
@@ -43,6 +47,7 @@ class Plugin(Protocol):
 
 
 # ------------------------- terminal app -------------------------
+
 
 class TerminalApp:
     """
@@ -69,18 +74,22 @@ class TerminalApp:
         self._completer: Optional[FuzzyCompleter] = None
 
         # Built-in commands
-        self.register_command(Command(
-            name="help",
-            description="Show help for commands",
-            aliases=["?"],
-            handler=self._cmd_help,
-        ))
-        self.register_command(Command(
-            name="quit",
-            description="Exit the TUI",
-            aliases=["exit"],
-            handler=self._cmd_quit,
-        ))
+        self.register_command(
+            Command(
+                name="help",
+                description="Show help for commands",
+                aliases=["?"],
+                handler=self._cmd_help,
+            )
+        )
+        self.register_command(
+            Command(
+                name="quit",
+                description="Exit the TUI",
+                aliases=["exit"],
+                handler=self._cmd_quit,
+            )
+        )
 
     # ---------- registration API ----------
 

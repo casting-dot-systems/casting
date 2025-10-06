@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import uuid
@@ -16,7 +15,9 @@ class IdentityBase(BaseModel):
     entity_type: EntityType
     entity_id: uuid.UUID
     application: str = Field(description="Application name, e.g. email, notion, obsidian, discord, ...")
-    external_id: str = Field(description="Application-specific identifier (email address, page ID, user/channel ID, ...)")
+    external_id: str = Field(
+        description="Application-specific identifier (email address, page ID, user/channel ID, ...)"
+    )
     display_name: Optional[str] = None
     uri: Optional[str] = Field(default=None, description="Optional deep link / URL")
     is_primary: bool = False

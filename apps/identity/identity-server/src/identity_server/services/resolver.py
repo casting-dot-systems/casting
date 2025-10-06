@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import uuid
@@ -27,8 +26,7 @@ def _load_entity(db: Session, entity_type: EntityType, id: uuid.UUID) -> Optiona
     if entity_type == EntityType.member:
         table_name = _get_table_name(db, "members")
         result = db.execute(
-            text(f"SELECT member_id, name, status FROM {table_name} WHERE member_id = :id"),
-            {"id": str(id)}
+            text(f"SELECT member_id, name, status FROM {table_name} WHERE member_id = :id"), {"id": str(id)}
         ).fetchone()
         if not result:
             return None
@@ -37,8 +35,7 @@ def _load_entity(db: Session, entity_type: EntityType, id: uuid.UUID) -> Optiona
     elif entity_type == EntityType.meeting:
         table_name = _get_table_name(db, "meetings")
         result = db.execute(
-            text(f"SELECT id, title, scheduled_start, scheduled_end FROM {table_name} WHERE id = :id"),
-            {"id": str(id)}
+            text(f"SELECT id, title, scheduled_start, scheduled_end FROM {table_name} WHERE id = :id"), {"id": str(id)}
         ).fetchone()
         if not result:
             return None
@@ -52,8 +49,7 @@ def _load_entity(db: Session, entity_type: EntityType, id: uuid.UUID) -> Optiona
     elif entity_type == EntityType.project:
         table_name = _get_table_name(db, "projects")
         result = db.execute(
-            text(f"SELECT id, name, description FROM {table_name} WHERE id = :id"),
-            {"id": str(id)}
+            text(f"SELECT id, name, description FROM {table_name} WHERE id = :id"), {"id": str(id)}
         ).fetchone()
         if not result:
             return None
@@ -93,6 +89,4 @@ def resolve(db: Session, entity_type: EntityType, id: uuid.UUID) -> Optional[sch
 
     identities_out = [schemas.IdentityRead.model_validate(i) for i in identities]
 
-    return schemas.ResolvedEntity(
-        entity_type=entity_type.value, entity=entity_data, identities=identities_out
-    )
+    return schemas.ResolvedEntity(entity_type=entity_type.value, entity=entity_data, identities=identities_out)

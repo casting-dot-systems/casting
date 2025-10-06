@@ -2,7 +2,9 @@
 name = "casting-workspace"
 version = "0.0.1"
 description = "Workspace root for Casting monorepo"
-dependencies = []
+dependencies = [
+    "discord-py>=2.6.3",
+]
 
 # Do not install the root into the venv.
 [tool.uv]

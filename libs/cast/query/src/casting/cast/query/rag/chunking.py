@@ -24,7 +24,7 @@ def split_by_headings(md_body: str, max_chars: int) -> List[str]:
     # Build coarse sections per heading
     starts = [pos for pos, _ in positions] + [len(text)]
     for i in range(len(starts) - 1):
-        chunk = text[starts[i]: starts[i + 1]].strip()
+        chunk = text[starts[i] : starts[i + 1]].strip()
         if chunk:
             sections.append(chunk)
 

@@ -3,23 +3,27 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Callable, Dict
 
+from casting.discord.framework import (
+    ChatContext,
+    DiscordAgentAPI,
+    DiscordAgentRuntime,
+    OutboundMessage,
+    PromptRequestCommand,
+    SendMessageCommand,
+    StatusEvent,
+)
 from casting.discord.framework.discord_adapter.context import build_chat_context_from_message
 from casting.discord.framework.discord_adapter.session_manager import SessionManager, SessionStatus
-from casting.discord.framework.models import ChatContext
-from casting.discord.framework.protocol import PromptRequestCommand, StatusEvent
+from casting.discord.framework.models import MessageReference
 from llmgine.bus.bus import MessageBus
 from llmgine.llm import SessionID
+from llmgine.messages.commands import CommandResult
 
 from .tool_chat_engine import (
     DarcyToolChatEngine,
     DarcyToolChatEngineCommand,
     DarcyToolChatEngineStatusEvent,
 )
-
-
-def _get_bus() -> MessageBus:
-    """Fetch the global MessageBus() singleton from the environment."""
-    return MessageBus()
 
 
 class DarcyEngineBridge:
@@ -40,17 +44,26 @@ class DarcyEngineBridge:
         self._prompt_cls = prompt_request_cls
         self._status_evt_cls = status_event_cls
         self._engines: Dict[str, DarcyToolChatEngine] = {}
+        self._bus = MessageBus()
+        self._api = DiscordAgentAPI(self._sessions.bot)
+        self._runtime = DiscordAgentRuntime(bus=self._bus, api=self._api)
+        self._registered_sessions: set[str] = set()
+        self._bus_started = False
 
     def _default_build_command(self, ctx: ChatContext, sid: str) -> Any:
         ctx_str = build_chat_context_from_message(ctx)
         return DarcyToolChatEngineCommand(session_id=SessionID(sid), prompt=ctx_str)
 
     def register_handlers(self, session_id: str) -> None:
-        bus = _get_bus()
+        bus = self._bus
         sid_key = SessionID(session_id)
 
         engine = self._engine_factory(session_id)
         self._engines[session_id] = engine
+
+        if session_id not in self._registered_sessions:
+            self._runtime.register(session_id=sid_key)
+            self._registered_sessions.add(session_id)
 
         if hasattr(bus, "register_command_handler"):
             bus.register_command_handler(
@@ -59,14 +72,16 @@ class DarcyEngineBridge:
                 session_id=sid_key,
             )  # type: ignore[attr-defined]
 
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(bus.start())
-        except RuntimeError:
-            # No running loop (e.g. during tests), skip starting the bus.
-            pass
+        if not self._bus_started:
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(bus.start())
+                self._bus_started = True
+            except RuntimeError:
+                pass
 
         if hasattr(bus, "register_command_handler"):
+
             async def _prompt_handler(cmd: Any) -> Any:
                 if getattr(cmd, "session_id", None) not in (session_id, sid_key):
                     return type("R", (), {"success": False, "result": None, "error": "wrong session"})()
@@ -76,12 +91,10 @@ class DarcyEngineBridge:
                 value = await self._sessions.request_input(session_id, prompt, kind, timeout)
                 return type("R", (), {"success": True, "result": value, "error": None})()
 
-            try:
-                bus.register_command_handler(self._prompt_cls, _prompt_handler, session_id=sid_key)  # type: ignore[attr-defined]
-            except Exception:
-                bus.register_command_handler(self._prompt_cls, _prompt_handler)  # type: ignore[attr-defined]
+            bus.register_command_handler(self._prompt_cls, _prompt_handler, session_id=sid_key)  # type: ignore[attr-defined]
 
         if hasattr(bus, "register_event_handler"):
+
             async def _status_handler(evt: Any) -> None:
                 if getattr(evt, "session_id", None) not in (session_id, sid_key):
                     return
@@ -92,30 +105,78 @@ class DarcyEngineBridge:
                     status_text or None,
                 )
 
-            try:
-                bus.register_event_handler(self._status_evt_cls, _status_handler, session_id=sid_key)  # type: ignore[attr-defined]
-            except Exception:
-                bus.register_event_handler(self._status_evt_cls, _status_handler)  # type: ignore[attr-defined]
+            bus.register_event_handler(self._status_evt_cls, _status_handler, session_id=sid_key)  # type: ignore[attr-defined]
+            bus.register_event_handler(
+                DarcyToolChatEngineStatusEvent,
+                _status_handler,
+                session_id=sid_key,
+            )  # type: ignore[attr-defined]
 
-            try:
-                bus.register_event_handler(
-                    DarcyToolChatEngineStatusEvent,
-                    _status_handler,
-                    session_id=sid_key,
-                )  # type: ignore[attr-defined]
-            except Exception:
-                try:
-                    bus.register_event_handler(DarcyToolChatEngineStatusEvent, _status_handler)  # type: ignore[attr-defined]
-                except Exception:
-                    pass
-
-    async def run_engine(self, context: ChatContext, session_id: str) -> Any:
-        bus = _get_bus()
+    async def run_engine(
+        self, context: ChatContext, session_id: str, *, max_length: int | None = None
+    ) -> CommandResult:
+        bus = self._bus
         cmd = self._build_command(context, session_id)
+        sid_key = SessionID(session_id)
         session_ctx = getattr(bus, "session", None)
+
+        async def _execute_command() -> CommandResult:
+            print(f"Executing command: {cmd}")
+            return await bus.execute(cmd)  # type: ignore[arg-type]
+
         if callable(session_ctx):
             async with session_ctx(session_id):  # type: ignore[misc]
-                print(f"Executing command: {cmd}")
-                return await bus.execute(cmd)  # type: ignore[arg-type]
+                engine_result = await _execute_command()
+        else:
+            engine_result = await _execute_command()
 
-        return await bus.execute(cmd)
+        session = self._sessions.active.get(session_id)
+        if session is None:
+            return engine_result
+
+        channel_id = getattr(session.channel, "id", None)
+        if channel_id is None:
+            return engine_result
+
+        origin_message = session.data.get("origin_message")
+        reference = None
+        if origin_message is not None:
+            reference = MessageReference(
+                message_id=str(getattr(origin_message, "id", "")),
+                channel_id=str(getattr(origin_message.channel, "id", "")),
+                guild_id=str(getattr(getattr(origin_message, "guild", None), "id", "")) or None,
+            )
+
+        if engine_result.success:
+            payload = engine_result.result
+            if payload is None:
+                content = "✅ Done."
+            else:
+                content = str(payload)
+            if max_length is not None:
+                content = content[:max_length]
+            outbound = OutboundMessage(content=content, reference=reference)
+            send_cmd = SendMessageCommand(channel_id=str(channel_id), message=outbound, session_id=sid_key)
+            send_result = await bus.execute(send_cmd)
+            if not send_result.success:
+                return CommandResult(
+                    success=False,
+                    error=send_result.error or "Failed to send response",
+                    result=engine_result.result,
+                    session_id=sid_key,
+                    metadata={"delivery_failed": True},
+                )
+        else:
+            error_text = engine_result.error or "Unknown error"
+            content = f"❌ Error: {error_text}"
+            if max_length is not None:
+                content = content[:max_length]
+            outbound = OutboundMessage(content=content, reference=reference)
+            send_cmd = SendMessageCommand(channel_id=str(channel_id), message=outbound, session_id=sid_key)
+            await bus.execute(send_cmd)
+
+        if hasattr(bus, "unregister_session_handlers"):
+            bus.unregister_session_handlers(sid_key)  # type: ignore[attr-defined]
+        self._registered_sessions.discard(session_id)
+        self._engines.pop(session_id, None)
+        return engine_result

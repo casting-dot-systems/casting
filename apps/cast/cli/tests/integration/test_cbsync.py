@@ -18,6 +18,7 @@ def _mk_cast(root: Path, name: str) -> Path:
         "cast-name": name,
     }
     import ruamel.yaml
+
     y = ruamel.yaml.YAML()
     with open(root / ".cast" / "config.yaml", "w", encoding="utf-8") as f:
         y.dump(cfg, f)

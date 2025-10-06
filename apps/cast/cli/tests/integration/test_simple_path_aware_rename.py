@@ -53,8 +53,8 @@ def test_simple_baseline_establishment(tmp_path):
         # Check that baseline paths were recorded
         s_local = json.loads((A.root / ".cast" / "syncstate.json").read_text())
         base = s_local["baselines"][cid]["B"]
-        
-        # Should have recorded the paths  
+
+        # Should have recorded the paths
         assert "rel" in base
         assert "peer_rel" in base
         assert base["rel"] == "Test/File.md"

@@ -5,6 +5,7 @@ Behavior:
   • Baselines are stored under peer key 'cb:<codebase>'.
   • Decisions mirror HorizontalSync (mode='live' only).
 """
+
 from __future__ import annotations
 
 import json
@@ -114,9 +115,7 @@ class CodebaseSync:
                     # No YAML front-matter at all - create from scratch
                     fm = {}
                     fm, _ = ensure_cast_fields(fm, generate_id=True)
-                    fm, _ = ensure_codebase_membership(
-                        fm, codebase=codebase_name, origin_cast=self.config.cast_name
-                    )
+                    fm, _ = ensure_codebase_membership(fm, codebase=codebase_name, origin_cast=self.config.cast_name)
                     write_cast_file(p, fm, body, reorder=True)
                     fixed += 1
                     continue
@@ -142,6 +141,7 @@ class CodebaseSync:
         if not path.exists():
             raise FileNotFoundError(f"Cast not initialized: {path} not found")
         import ruamel.yaml
+
         y = ruamel.yaml.YAML()
         with open(path, encoding="utf-8") as f:
             data = y.load(f)
@@ -195,8 +195,13 @@ class CodebaseSync:
             return p.name
 
     def _update_baseline(
-        self, file_id: str, peer_key: str, digest: str,
-        *, local_rel: Optional[str] = None, remote_rel: Optional[str] = None
+        self,
+        file_id: str,
+        peer_key: str,
+        digest: str,
+        *,
+        local_rel: Optional[str] = None,
+        remote_rel: Optional[str] = None,
     ) -> None:
         if file_id not in self.syncstate.baselines:
             self.syncstate.baselines[file_id] = {}
@@ -337,7 +342,9 @@ class CodebaseSync:
             logger.info(f"cbsync: normalized {_fixed} local file(s) for codebase '{codebase_name}'")
             local_index = build_ephemeral_index(self.root_path, self.vault_path, fixup=True, limit_file=file_filter)
             # recompute local_ids since codebase membership may have been added
-            local_ids = {rec["id"] for rec in local_index.by_id.values() if codebase_name in (rec.get("codebases") or [])}
+            local_ids = {
+                rec["id"] for rec in local_index.by_id.values() if codebase_name in (rec.get("codebases") or [])
+            }
 
         # if --file provided and points to an id/path that exists only on remote, include it
         if file_filter:
@@ -366,23 +373,42 @@ class CodebaseSync:
             else:
                 # Fall back to id-based filename
                 local_path = self.vault_path / f"{cid}.md"
-            remote_path = remote_vault / (rrec["relpath"] if rrec else (baseline.peer_rel if baseline and baseline.peer_rel else (lrec["relpath"] if lrec else f"{cid}.md")))
+            remote_path = remote_vault / (
+                rrec["relpath"]
+                if rrec
+                else (
+                    baseline.peer_rel if baseline and baseline.peer_rel else (lrec["relpath"] if lrec else f"{cid}.md")
+                )
+            )
             rename_to = None
             if decision == CBDecision.RENAME_REMOTE and lrec:
                 rename_to = remote_vault / lrec["relpath"]
             if decision == CBDecision.RENAME_LOCAL and rrec:
                 rename_to = self.vault_path / rrec["relpath"]
-            plans.append(CBPlan(
-                file_id=cid,
-                local_path=local_path,
-                remote_path=remote_path if (rrec or decision in (CBDecision.CREATE_REMOTE, CBDecision.PUSH, CBDecision.DELETE_REMOTE, CBDecision.RENAME_REMOTE)) else None,
-                remote_root=entry.root,
-                decision=decision,
-                local_digest=lrec["digest"] if lrec else None,
-                remote_digest=rrec["digest"] if rrec else None,
-                baseline_digest=(baseline.digest if baseline else None),
-                rename_to=rename_to,
-            ))
+            plans.append(
+                CBPlan(
+                    file_id=cid,
+                    local_path=local_path,
+                    remote_path=remote_path
+                    if (
+                        rrec
+                        or decision
+                        in (
+                            CBDecision.CREATE_REMOTE,
+                            CBDecision.PUSH,
+                            CBDecision.DELETE_REMOTE,
+                            CBDecision.RENAME_REMOTE,
+                        )
+                    )
+                    else None,
+                    remote_root=entry.root,
+                    decision=decision,
+                    local_digest=lrec["digest"] if lrec else None,
+                    remote_digest=rrec["digest"] if rrec else None,
+                    baseline_digest=(baseline.digest if baseline else None),
+                    rename_to=rename_to,
+                )
+            )
         self.last_plans = plans[:]
 
         if dry_run:
@@ -403,7 +429,9 @@ class CodebaseSync:
                         fm, body, has = parse_cast_file(dest)
                         if not has:
                             return
-                        fm2, changed = ensure_codebase_membership(fm, codebase=codebase_name, origin_cast=self.config.cast_name)
+                        fm2, changed = ensure_codebase_membership(
+                            fm, codebase=codebase_name, origin_cast=self.config.cast_name
+                        )
                         if changed:
                             write_cast_file(dest, fm2, body, reorder=True)
                     except Exception:
@@ -413,7 +441,9 @@ class CodebaseSync:
                     # if digests equal, refresh baseline paths
                     if p.local_digest and p.remote_digest and p.local_digest == p.remote_digest:
                         self._update_baseline(
-                            p.file_id, peer_key, p.local_digest,
+                            p.file_id,
+                            peer_key,
+                            p.local_digest,
                             local_rel=self._rel(self.vault_path, p.local_path),
                             remote_rel=self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None,
                         )
@@ -432,18 +462,30 @@ class CodebaseSync:
                             p.local_path = target
                             # rename-cascade on LOCAL
                             try:
-                                self._rename_cascade(self.vault_path, lrel, rrel, f"codebase pull adopt({codebase_name})")
+                                self._rename_cascade(
+                                    self.vault_path, lrel, rrel, f"codebase pull adopt({codebase_name})"
+                                )
                             except Exception:
                                 pass
                     shutil.copy2(p.remote_path, p.local_path)
                     _fix_yaml(p.local_path, "local")
                     self._update_baseline(
-                        p.file_id, peer_key, p.remote_digest or "",
+                        p.file_id,
+                        peer_key,
+                        p.remote_digest or "",
                         local_rel=self._rel(self.vault_path, p.local_path),
                         remote_rel=self._rel(entry.docs_cast_path, p.remote_path),
                     )
                     self.summary.counts["pull"] = self.summary.counts.get("pull", 0) + 1
-                    self.summary.items.append(CBSummaryItem("pull", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path), "remote → local"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            "pull",
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            self._rel(entry.docs_cast_path, p.remote_path),
+                            "remote → local",
+                        )
+                    )
 
                 elif p.decision in (CBDecision.PUSH, CBDecision.CREATE_REMOTE):
                     # adopt local rename on remote before copy
@@ -469,25 +511,45 @@ class CodebaseSync:
                     shutil.copy2(p.local_path, p.remote_path)
                     _fix_yaml(p.remote_path, "remote")
                     self._update_baseline(
-                        p.file_id, peer_key, p.local_digest or "",
+                        p.file_id,
+                        peer_key,
+                        p.local_digest or "",
                         local_rel=self._rel(self.vault_path, p.local_path),
                         remote_rel=self._rel(entry.docs_cast_path, p.remote_path),
                     )
                     key = "create_peer" if p.decision == CBDecision.CREATE_REMOTE else "push"
                     self.summary.counts[key] = self.summary.counts.get(key, 0) + 1
-                    self.summary.items.append(CBSummaryItem(key, p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path), "local → remote"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            key,
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            self._rel(entry.docs_cast_path, p.remote_path),
+                            "local → remote",
+                        )
+                    )
 
                 elif p.decision == CBDecision.CREATE_LOCAL:
                     p.local_path.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(p.remote_path, p.local_path)
                     _fix_yaml(p.local_path, "local")
                     self._update_baseline(
-                        p.file_id, peer_key, p.remote_digest or "",
+                        p.file_id,
+                        peer_key,
+                        p.remote_digest or "",
                         local_rel=self._rel(self.vault_path, p.local_path),
                         remote_rel=self._rel(entry.docs_cast_path, p.remote_path),
                     )
                     self.summary.counts["create_local"] = self.summary.counts.get("create_local", 0) + 1
-                    self.summary.items.append(CBSummaryItem("create_local", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path), "remote → local"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            "create_local",
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            self._rel(entry.docs_cast_path, p.remote_path),
+                            "remote → local",
+                        )
+                    )
 
                 elif p.decision == CBDecision.DELETE_LOCAL:
                     p.local_path.unlink(missing_ok=True)
@@ -497,7 +559,15 @@ class CodebaseSync:
                         if not self.syncstate.baselines[p.file_id]:
                             self.syncstate.baselines.pop(p.file_id)
                     self.summary.counts["delete_local"] = self.summary.counts.get("delete_local", 0) + 1
-                    self.summary.items.append(CBSummaryItem("delete_local", p.file_id, self._rel(self.vault_path, p.local_path), None, "deleted locally (accept remote deletion)"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            "delete_local",
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            None,
+                            "deleted locally (accept remote deletion)",
+                        )
+                    )
 
                 elif p.decision == CBDecision.DELETE_REMOTE:
                     if p.remote_path:
@@ -507,7 +577,15 @@ class CodebaseSync:
                         if not self.syncstate.baselines[p.file_id]:
                             self.syncstate.baselines.pop(p.file_id)
                     self.summary.counts["delete_peer"] = self.summary.counts.get("delete_peer", 0) + 1
-                    self.summary.items.append(CBSummaryItem("delete_peer", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else "", "deleted on remote (propagate)"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            "delete_peer",
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else "",
+                            "deleted on remote (propagate)",
+                        )
+                    )
 
                 elif p.decision == CBDecision.RENAME_REMOTE and p.remote_path and p.rename_to:
                     p.rename_to.parent.mkdir(parents=True, exist_ok=True)
@@ -522,12 +600,22 @@ class CodebaseSync:
                             pass
                     # refresh baseline with new paths
                     self._update_baseline(
-                        p.file_id, peer_key, p.remote_digest or p.local_digest or "",
+                        p.file_id,
+                        peer_key,
+                        p.remote_digest or p.local_digest or "",
                         local_rel=self._rel(self.vault_path, p.local_path),
                         remote_rel=self._rel(entry.docs_cast_path, p.rename_to),
                     )
                     self.summary.counts["rename_peer"] = self.summary.counts.get("rename_peer", 0) + 1
-                    self.summary.items.append(CBSummaryItem("rename_peer", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.rename_to), "remote: rename to match local"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            "rename_peer",
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            self._rel(entry.docs_cast_path, p.rename_to),
+                            "remote: rename to match local",
+                        )
+                    )
 
                 elif p.decision == CBDecision.RENAME_LOCAL and p.rename_to:
                     p.rename_to.parent.mkdir(parents=True, exist_ok=True)
@@ -541,12 +629,22 @@ class CodebaseSync:
                             pass
                     p.local_path = p.rename_to
                     self._update_baseline(
-                        p.file_id, peer_key, p.remote_digest or p.local_digest or "",
+                        p.file_id,
+                        peer_key,
+                        p.remote_digest or p.local_digest or "",
                         local_rel=self._rel(self.vault_path, p.local_path),
                         remote_rel=self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None,
                     )
                     self.summary.counts["rename_local"] = self.summary.counts.get("rename_local", 0) + 1
-                    self.summary.items.append(CBSummaryItem("rename_local", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None, "local: rename to match remote"))
+                    self.summary.items.append(
+                        CBSummaryItem(
+                            "rename_local",
+                            p.file_id,
+                            self._rel(self.vault_path, p.local_path),
+                            self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None,
+                            "local: rename to match remote",
+                        )
+                    )
 
                 elif p.decision == CBDecision.CONFLICT:
                     res = handle_conflict(
@@ -568,19 +666,33 @@ class CodebaseSync:
                             shutil.move(str(p.remote_path), str(desired))
                             # cascade on REMOTE
                             try:
-                                self._rename_cascade(entry.docs_cast_path, before_rel, lrel, "codebase conflict KEEP_LOCAL")
+                                self._rename_cascade(
+                                    entry.docs_cast_path, before_rel, lrel, "codebase conflict KEEP_LOCAL"
+                                )
                             except Exception:
                                 pass
                         shutil.copy2(p.local_path, desired)
                         _fix_yaml(desired, "remote")
                         self._update_baseline(
-                            p.file_id, peer_key, p.local_digest or "",
+                            p.file_id,
+                            peer_key,
+                            p.local_digest or "",
                             local_rel=lrel,
                             remote_rel=self._rel(entry.docs_cast_path, desired),
                         )
-                        self.summary.counts["conflict_keep_local"] = self.summary.counts.get("conflict_keep_local", 0) + 1
+                        self.summary.counts["conflict_keep_local"] = (
+                            self.summary.counts.get("conflict_keep_local", 0) + 1
+                        )
                         self.summary.conflicts_resolved += 1
-                        self.summary.items.append(CBSummaryItem("conflict", p.file_id, lrel, self._rel(entry.docs_cast_path, desired), "resolved: KEEP_LOCAL"))
+                        self.summary.items.append(
+                            CBSummaryItem(
+                                "conflict",
+                                p.file_id,
+                                lrel,
+                                self._rel(entry.docs_cast_path, desired),
+                                "resolved: KEEP_LOCAL",
+                            )
+                        )
                     elif res == ConflictResolution.KEEP_PEER:
                         # adopt remote name locally then pull
                         if p.remote_path:
@@ -592,21 +704,42 @@ class CodebaseSync:
                                 shutil.move(str(p.local_path), str(target))
                                 # cascade on LOCAL
                                 try:
-                                    self._rename_cascade(self.vault_path, before_rel, rrel, "codebase conflict KEEP_PEER")
+                                    self._rename_cascade(
+                                        self.vault_path, before_rel, rrel, "codebase conflict KEEP_PEER"
+                                    )
                                 except Exception:
                                     pass
                             shutil.copy2(p.remote_path, target)
                             _fix_yaml(target, "local")
                             self._update_baseline(
-                                p.file_id, peer_key, p.remote_digest or "",
-                                local_rel=rrel, remote_rel=rrel,
+                                p.file_id,
+                                peer_key,
+                                p.remote_digest or "",
+                                local_rel=rrel,
+                                remote_rel=rrel,
                             )
                         self.summary.counts["conflict_keep_peer"] = self.summary.counts.get("conflict_keep_peer", 0) + 1
                         self.summary.conflicts_resolved += 1
-                        self.summary.items.append(CBSummaryItem("conflict", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None, "resolved: KEEP_PEER"))
+                        self.summary.items.append(
+                            CBSummaryItem(
+                                "conflict",
+                                p.file_id,
+                                self._rel(self.vault_path, p.local_path),
+                                self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None,
+                                "resolved: KEEP_PEER",
+                            )
+                        )
                     else:
                         self.summary.conflicts_open += 1
-                        self.summary.items.append(CBSummaryItem("conflict", p.file_id, self._rel(self.vault_path, p.local_path), self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None, "skipped"))
+                        self.summary.items.append(
+                            CBSummaryItem(
+                                "conflict",
+                                p.file_id,
+                                self._rel(self.vault_path, p.local_path),
+                                self._rel(entry.docs_cast_path, p.remote_path) if p.remote_path else None,
+                                "skipped",
+                            )
+                        )
                         exit_code = max(exit_code, 3)
                 else:
                     # no-op default

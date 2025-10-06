@@ -49,7 +49,9 @@ class ChromaStore:
             db_path = root_path / DEFAULT_DB_SUBDIR
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self.client = chromadb.PersistentClient(path=str(db_path))
-        self.collection = self.client.get_or_create_collection(name=collection_name, embedding_function=embedding_function)
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name, embedding_function=embedding_function
+        )
 
     # ---------- Admin / utility ----------
 
@@ -96,10 +98,14 @@ class ChromaStore:
     def search(self, query: str, k: int = 6, query_embeddings: Optional[List[List[float]]] = None) -> List[QueryHit]:
         if query_embeddings:
             # Use provided embeddings (manual query)
-            res = self.collection.query(query_embeddings=query_embeddings, n_results=k, include=["documents", "metadatas", "distances"])
+            res = self.collection.query(
+                query_embeddings=query_embeddings, n_results=k, include=["documents", "metadatas", "distances"]
+            )
         else:
             # Use ChromaDB's built-in embedding function
-            res = self.collection.query(query_texts=[query], n_results=k, include=["documents", "metadatas", "distances"])
+            res = self.collection.query(
+                query_texts=[query], n_results=k, include=["documents", "metadatas", "distances"]
+            )
         ids = (res.get("ids") or [[]])[0]
         docs = (res.get("documents") or [[]])[0]
         metas = (res.get("metadatas") or [[]])[0]

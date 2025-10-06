@@ -35,6 +35,7 @@ _yaml.width = 4096
 
 # -------------------- Cast state & helpers --------------------
 
+
 def _find_cast_root() -> Path:
     cur = Path.cwd()
     if (cur / ".cast").exists():
@@ -67,6 +68,7 @@ class FileItem:
 
 class CastContext:
     """In-memory view of the Cast folder and ephemeral index."""
+
     def __init__(self, root: Path, vault: Path, cast_name: str):
         self.root = root
         self.vault = vault
@@ -136,7 +138,7 @@ class CastFileCompleter(Completer):
     def _needs_quoting(s: str) -> bool:
         if not s:
             return True
-        specials = set(' \t\r\n"\'\\&|;<>*?()[]{}')
+        specials = set(" \t\r\n\"'\\&|;<>*?()[]{}")
         return any((c in specials) or c.isspace() for c in s)
 
     @staticmethod
@@ -171,6 +173,7 @@ class CastFileCompleter(Completer):
 
 # -------------------- commands & helpers --------------------
 
+
 def _preview_file(console: Console, vault: Path, it: FileItem) -> None:
     path = vault / it.relpath
     if not path.exists():
@@ -191,6 +194,7 @@ def _preview_file(console: Console, vault: Path, it: FileItem) -> None:
         if sub:
             try:
                 from io import StringIO
+
                 buf = StringIO()
                 y = YAML()
                 y.preserve_quotes = True
@@ -223,7 +227,9 @@ def _sync(console: Console, cctx: CastContext, file_token: Optional[str] = None,
         if it and it.file_id:
             filt = it.file_id
         elif it and not it.file_id:
-            console.print(f"[yellow]Warning:[/yellow] '{file_token}' is not a Cast file (no id). Syncing all files instead.")
+            console.print(
+                f"[yellow]Warning:[/yellow] '{file_token}' is not a Cast file (no id). Syncing all files instead."
+            )
         else:
             filt = file_token
     code = hs.sync(
@@ -254,6 +260,7 @@ def _sync(console: Console, cctx: CastContext, file_token: Optional[str] = None,
 
 # -------------------- plugin implementation --------------------
 
+
 class CastTUIPlugin(Plugin):
     """Registers Cast commands + completers into the generic framework."""
 
@@ -272,45 +279,59 @@ class CastTUIPlugin(Plugin):
         self._file_completer = CastFileCompleter(self._cast)
 
         # Commands
-        ctx.app.register_command(Command(
-            name="open",
-            aliases=["view"],
-            description="Preview YAML + body (default action)",
-            completer=self._file_completer,
-            handler=lambda c, a: self._cmd_open(c, a),
-        ))
-        ctx.app.register_command(Command(
-            name="edit",
-            description="Open file in $EDITOR",
-            completer=self._file_completer,
-            handler=lambda c, a: self._cmd_edit(c, a),
-        ))
-        ctx.app.register_command(Command(
-            name="sync",
-            description="Run HorizontalSync; optional file arg limits scope",
-            completer=self._file_completer,
-            handler=lambda c, a: self._cmd_sync(c, a),
-        ))
-        ctx.app.register_command(Command(
-            name="report",
-            description="Summarize files/peers/codebases",
-            handler=lambda c, a: self._cmd_report(c, a),
-        ))
-        ctx.app.register_command(Command(
-            name="peers",
-            description="List peers referenced in cast",
-            handler=lambda c, a: self._cmd_peers(c, a),
-        ))
-        ctx.app.register_command(Command(
-            name="codebases",
-            description="List codebases (referenced vs installed)",
-            handler=lambda c, a: self._cmd_codebases(c, a),
-        ))
-        ctx.app.register_command(Command(
-            name="cbsync",
-            description="Sync with a codebase: cbsync <name> [<file>]",
-            handler=lambda c, a: self._cmd_cbsync(c, a),
-        ))
+        ctx.app.register_command(
+            Command(
+                name="open",
+                aliases=["view"],
+                description="Preview YAML + body (default action)",
+                completer=self._file_completer,
+                handler=lambda c, a: self._cmd_open(c, a),
+            )
+        )
+        ctx.app.register_command(
+            Command(
+                name="edit",
+                description="Open file in $EDITOR",
+                completer=self._file_completer,
+                handler=lambda c, a: self._cmd_edit(c, a),
+            )
+        )
+        ctx.app.register_command(
+            Command(
+                name="sync",
+                description="Run HorizontalSync; optional file arg limits scope",
+                completer=self._file_completer,
+                handler=lambda c, a: self._cmd_sync(c, a),
+            )
+        )
+        ctx.app.register_command(
+            Command(
+                name="report",
+                description="Summarize files/peers/codebases",
+                handler=lambda c, a: self._cmd_report(c, a),
+            )
+        )
+        ctx.app.register_command(
+            Command(
+                name="peers",
+                description="List peers referenced in cast",
+                handler=lambda c, a: self._cmd_peers(c, a),
+            )
+        )
+        ctx.app.register_command(
+            Command(
+                name="codebases",
+                description="List codebases (referenced vs installed)",
+                handler=lambda c, a: self._cmd_codebases(c, a),
+            )
+        )
+        ctx.app.register_command(
+            Command(
+                name="cbsync",
+                description="Sync with a codebase: cbsync <name> [<file>]",
+                handler=lambda c, a: self._cmd_cbsync(c, a),
+            )
+        )
 
         # Default command is "open"
         ctx.app.set_default_command("open")
@@ -320,11 +341,13 @@ class CastTUIPlugin(Plugin):
 
     def bottom_toolbar(self, _ctx: TerminalContext) -> HTML | str:
         n = len(self._cast.items) if self._cast else 0
-        name = (self._cast.cast_name if self._cast else "Cast")
-        return HTML(f"<b>{name}</b> • {n} files • <b>Ctrl-R</b> reindex • <b>help</b> for commands • <b>quit</b> to exit")
+        name = self._cast.cast_name if self._cast else "Cast"
+        return HTML(
+            f"<b>{name}</b> • {n} files • <b>Ctrl-R</b> reindex • <b>help</b> for commands • <b>quit</b> to exit"
+        )
 
     def prompt(self, _ctx: TerminalContext) -> str:
-        name = (self._cast.cast_name if self._cast else "cast")
+        name = self._cast.cast_name if self._cast else "cast"
         return f"{name.lower()}:tui> "
 
     def default_command(self, _ctx: TerminalContext) -> str:

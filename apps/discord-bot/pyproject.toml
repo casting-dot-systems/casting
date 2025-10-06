@@ -5,6 +5,7 @@ description = "Darcy Discord bot application"
 requires-python = ">=3.13"
 dependencies = [
     "cast-query",
+    "casting-discord-framework",
     "llmgine",
     "litellm>=1.44.4",
 ]
@@ -12,6 +13,7 @@ dependencies = [
 
 [tool.uv.sources]
 cast-query = { workspace = true }
+casting-discord-framework = { workspace = true }
 llmgine = { workspace = true }
 
 [project.scripts]

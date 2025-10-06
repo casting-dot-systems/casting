@@ -221,9 +221,7 @@ class Scenario:
                 assert (v.root / v.vault_rel(rel)).exists(), f"{rel} should exist in {v.name}"
             elif kind == "assert_absent":
                 v, rel = args
-                assert not (v.root / v.vault_rel(rel)).exists(), (
-                    f"{rel} should be absent in {v.name}"
-                )
+                assert not (v.root / v.vault_rel(rel)).exists(), f"{rel} should be absent in {v.name}"
             elif kind == "assert_equal":
                 v1, r1, v2, r2 = args
                 p1 = v1.root / v1.vault_rel(r1)

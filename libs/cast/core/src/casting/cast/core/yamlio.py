@@ -103,21 +103,14 @@ def parse_cast_file(filepath: Path) -> tuple[dict[str, Any] | None, str, bool]:
         return None, content, False
 
     # Check if it has any cast-* fields
-    has_cast_fields = any(
-        isinstance(k, str) and (k.startswith("cast-") or k == "id")
-        for k in front_matter
-    )
+    has_cast_fields = any(isinstance(k, str) and (k.startswith("cast-") or k == "id") for k in front_matter)
 
     return front_matter, body, has_cast_fields
 
 
 def extract_cast_fields(front_matter: dict[str, Any]) -> dict[str, Any]:
     """Extract Cast-related fields (including ``id``) from front matter."""
-    return {
-        k: v
-        for k, v in front_matter.items()
-        if isinstance(k, str) and (k.startswith("cast-") or k == "id")
-    }
+    return {k: v for k, v in front_matter.items() if isinstance(k, str) and (k.startswith("cast-") or k == "id")}
 
 
 def parse_hsync_entries(entries: list[str] | None) -> dict[str, str]:
@@ -144,9 +137,7 @@ def parse_hsync_entries(entries: list[str] | None) -> dict[str, str]:
 parse_vault_entries = parse_hsync_entries
 
 
-def ensure_cast_fields(
-    front_matter: dict[str, Any], generate_id: bool = True
-) -> tuple[dict[str, Any], bool]:
+def ensure_cast_fields(front_matter: dict[str, Any], generate_id: bool = True) -> tuple[dict[str, Any], bool]:
     """
     Ensure ``id`` exists and validate cast-vaults format.
 
@@ -226,9 +217,7 @@ def reorder_cast_fields(front_matter: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def write_cast_file(
-    filepath: Path, front_matter: dict[str, Any], body: str, reorder: bool = True
-) -> None:
+def write_cast_file(filepath: Path, front_matter: dict[str, Any], body: str, reorder: bool = True) -> None:
     """Write a Markdown file with YAML front matter."""
     # Migrate legacy field name inline if still present
     if "cast-vaults" in front_matter and "cast-hsync" not in front_matter:

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from fastapi import FastAPI
@@ -15,7 +14,7 @@ app = FastAPI(
     version="0.1.0",
     description="Identity resolution service for Cast entities",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Allow local tools

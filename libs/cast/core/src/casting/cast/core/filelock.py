@@ -100,9 +100,7 @@ def cast_lock(root_path: Path) -> Generator[None, None, None]:
     lock = FileLock(lock_path)
 
     if not lock.acquire():
-        raise RuntimeError(
-            "Another Cast operation is running. If this is incorrect, remove .cast/.lock"
-        )
+        raise RuntimeError("Another Cast operation is running. If this is incorrect, remove .cast/.lock")
 
     try:
         yield

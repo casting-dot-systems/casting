@@ -109,9 +109,7 @@ def test_full_flow_install_list_sync(env, tmp_path: Path):
     assert cid in syncstate.get("baselines", {}), "baseline should be recorded for id"
 
     # modify peer, then hsync from vault1 → should PULL
-    _write_file(
-        note2, _mk_note(note_id=cid, peers=["vault1", "vault2"], title="Note A", body="PeerEdit")
-    )
+    _write_file(note2, _mk_note(note_id=cid, peers=["vault1", "vault2"], title="Note A", body="PeerEdit"))
     old_cwd = os.getcwd()
     try:
         os.chdir(root1)
@@ -186,9 +184,7 @@ def test_safe_push_rename_when_peer_has_different_id(env, tmp_path: Path):
 
     # local id A
     cid_a = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-    _write_file(
-        root1 / rel, _mk_note(note_id=cid_a, peers=["vault1", "vault2"], title="A", body="A")
-    )
+    _write_file(root1 / rel, _mk_note(note_id=cid_a, peers=["vault1", "vault2"], title="A", body="A"))
 
     # peer already has a different id B at the same path
     cid_b = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"

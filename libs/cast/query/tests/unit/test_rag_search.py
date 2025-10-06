@@ -16,6 +16,7 @@ def _mk_cast(tmp: Path) -> Path:
     y = ruamel.yaml.YAML()
     cfg = {"id": "search-id-" + str(uuid4()), "cast-name": "SearchCast", "cast-location": "Cast"}
     from io import StringIO
+
     stream = StringIO()
     y.dump(cfg, stream)
     (tmp / ".cast" / "config.yaml").write_text(stream.getvalue(), encoding="utf-8")
@@ -30,6 +31,7 @@ def _note(vault: Path, rel: str, title: str, body: str):
         "cast-hsync": ["SearchCast (live)"],
     }
     from io import StringIO
+
     stream = StringIO()
     y.dump(fm, stream)
     content = f"---\n{stream.getvalue().strip()}\n---\n\n{body}\n"
@@ -51,6 +53,7 @@ def test_retrieval(tmp_path: Path):
 
     # For now, manually compute query embedding and pass it
     from casting.cast.query.rag.api import _get_store
+
     store = _get_store()
     query_embeddings = fake_embedder.embed_texts(["tails fetch"])
 

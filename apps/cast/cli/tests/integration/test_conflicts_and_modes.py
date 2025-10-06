@@ -17,9 +17,7 @@ def test_interactive_conflict_keep_peer(tmp_path):
 
         # Run hsync interactively from A and choose "2" => KEEP PEER
         sb.hsync(A, non_interactive=False, input="2\n")
-        assert read_file(A.root / rel).endswith("PEER\n"), (
-            "A should keep PEER version after conflict"
-        )
+        assert read_file(A.root / rel).endswith("PEER\n"), "A should keep PEER version after conflict"
 
 
 def test_safe_push_rename_when_peer_has_different_id(tmp_path):

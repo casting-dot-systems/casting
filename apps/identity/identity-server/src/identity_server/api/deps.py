@@ -1,4 +1,3 @@
-
 from collections.abc import Generator
 from sqlalchemy.orm import Session
 from fastapi import Depends

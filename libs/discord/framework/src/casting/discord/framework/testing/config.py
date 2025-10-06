@@ -7,7 +7,7 @@ from typing import Mapping
 import json
 import os
 
-from dotenv import dotenv_values
+from .env_manager import DotenvManager, EnvironmentContext, find_workspace_root
 
 
 class LiveDiscordTestError(RuntimeError):
@@ -24,6 +24,7 @@ class LiveDiscordTestConfig:
     channel_aliases: dict[str, str] = field(default_factory=dict)
     dm_targets: dict[str, str] = field(default_factory=dict)
     ready_timeout: float = 20.0
+    context: EnvironmentContext | None = None
 
     def resolve_channel(self, *, alias: str | None = None, channel_id: str | None = None) -> str:
         if channel_id:
@@ -53,32 +54,35 @@ def load_live_test_config(
     env: Mapping[str, str] | None = None,
     dotenv_path: str | os.PathLike[str] | None = None,
 ) -> LiveDiscordTestConfig:
-    values: dict[str, str] = {}
-    if dotenv_path is None:
-        dotenv_location = (env or os.environ).get("DISCORD_TEST_DOTENV")
-        if dotenv_location:
-            dotenv_path = dotenv_location
-    if dotenv_path:
-        path = Path(dotenv_path).expanduser()
-        if path.is_file():
-            for key, value in dotenv_values(path).items():
-                if value is not None:
-                    values[key] = value
-    source = dict(os.environ)
-    if env:
-        source.update(env)
-    source.update(values)
+    workspace = find_workspace_root(Path(__file__))
+    package_root = workspace / "libs" / "discord" / "framework"
 
-    token = source.get("DISCORD_TEST_BOT_TOKEN")
+    base_env = env if env is not None else os.environ
+    manager = DotenvManager(base_env=base_env)
+    manager.extend_with_defaults(workspace=workspace, package_root=package_root)
+
+    custom_path: os.PathLike[str] | None = None
+    if dotenv_path is None:
+        location = base_env.get("DISCORD_TEST_DOTENV")
+        if location:
+            custom_path = os.fspath(location)
+    else:
+        custom_path = os.fspath(dotenv_path)
+    if custom_path is not None:
+        manager.add_layer(custom_path, name=str(custom_path), required=True)
+
+    context = manager.load()
+
+    token = context.get("DISCORD_TEST_BOT_TOKEN")
     if not token:
         raise LiveDiscordTestError("DISCORD_TEST_BOT_TOKEN is required for live Discord tests")
 
-    default_channel = source.get("DISCORD_TEST_DEFAULT_CHANNEL")
-    guild_id = source.get("DISCORD_TEST_GUILD_ID")
-    ready_timeout = float(source.get("DISCORD_TEST_READY_TIMEOUT", "20"))
+    default_channel = context.get("DISCORD_TEST_DEFAULT_CHANNEL")
+    guild_id = context.get("DISCORD_TEST_GUILD_ID")
+    ready_timeout = float(context.get("DISCORD_TEST_READY_TIMEOUT", "20"))
 
-    channel_aliases = _parse_mapping(source.get("DISCORD_TEST_CHANNELS"))
-    dm_targets = _parse_mapping(source.get("DISCORD_TEST_DM_TARGETS"))
+    channel_aliases = _parse_mapping(context.get("DISCORD_TEST_CHANNELS"))
+    dm_targets = _parse_mapping(context.get("DISCORD_TEST_DM_TARGETS"))
 
     return LiveDiscordTestConfig(
         bot_token=token,
@@ -87,6 +91,7 @@ def load_live_test_config(
         channel_aliases=channel_aliases,
         dm_targets=dm_targets,
         ready_timeout=ready_timeout,
+        context=context,
     )
 
 

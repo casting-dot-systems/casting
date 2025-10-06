@@ -23,12 +23,7 @@ class LegacyMigrator:
     def __init__(self, api: BrainCoreAPI):
         self.api = api
 
-    async def migrate_legacy_discord_data(
-        self,
-        csv_path: str,
-        org_id: str,
-        system: str = "discord"
-    ) -> Dict[str, int]:
+    async def migrate_legacy_discord_data(self, csv_path: str, org_id: str, system: str = "discord") -> Dict[str, int]:
         """
         Migrate legacy Discord CSV data to brain-core.
 
@@ -44,26 +39,21 @@ class LegacyMigrator:
         print(f"Loaded {len(df)} records from CSV")
 
         # Track statistics
-        stats = {
-            "components_created": 0,
-            "members_created": 0,
-            "messages_created": 0,
-            "errors": 0
-        }
+        stats = {"components_created": 0, "members_created": 0, "messages_created": 0, "errors": 0}
 
         # Process unique components (channels and threads)
         print("Processing components...")
-        unique_channels = df[['channel_id', 'channel_name']].drop_duplicates()
+        unique_channels = df[["channel_id", "channel_name"]].drop_duplicates()
 
         for _, row in unique_channels.iterrows():
             try:
                 await self.api.upsert_component(
                     org_id=org_id,
                     system=system,
-                    component_id=str(row['channel_id']),
+                    component_id=str(row["channel_id"]),
                     component_type="channel",
-                    name=row['channel_name'],
-                    raw_data={"migrated_from": "legacy_csv"}
+                    name=row["channel_name"],
+                    raw_data={"migrated_from": "legacy_csv"},
                 )
                 stats["components_created"] += 1
             except Exception as e:
@@ -71,17 +61,17 @@ class LegacyMigrator:
                 stats["errors"] += 1
 
         # Process threads
-        thread_df = df[df['is_thread'] == True][['thread_id', 'thread_name', 'channel_id']].drop_duplicates()
+        thread_df = df[df["is_thread"] == True][["thread_id", "thread_name", "channel_id"]].drop_duplicates()
         for _, row in thread_df.iterrows():
             try:
                 await self.api.upsert_component(
                     org_id=org_id,
                     system=system,
-                    component_id=str(row['thread_id']),
+                    component_id=str(row["thread_id"]),
                     component_type="thread",
-                    name=row['thread_name'],
-                    parent_component_id=str(row['channel_id']),
-                    raw_data={"migrated_from": "legacy_csv"}
+                    name=row["thread_name"],
+                    parent_component_id=str(row["channel_id"]),
+                    raw_data={"migrated_from": "legacy_csv"},
                 )
                 stats["components_created"] += 1
             except Exception as e:
@@ -90,14 +80,12 @@ class LegacyMigrator:
 
         # Process members
         print("Processing members...")
-        unique_members = df[['discord_user_id', 'discord_username']].drop_duplicates()
+        unique_members = df[["discord_user_id", "discord_username"]].drop_duplicates()
 
         for _, row in unique_members.iterrows():
             try:
                 await self.api.ensure_member_for_discord(
-                    org_id=org_id,
-                    discord_user_id=str(row['discord_user_id']),
-                    display_name=row['discord_username']
+                    org_id=org_id, discord_user_id=str(row["discord_user_id"]), display_name=row["discord_username"]
                 )
                 stats["members_created"] += 1
             except Exception as e:
@@ -108,33 +96,37 @@ class LegacyMigrator:
         print("Processing messages...")
         batch_size = 1000
         for i in range(0, len(df), batch_size):
-            batch = df.iloc[i:i + batch_size]
-            print(f"Processing batch {i//batch_size + 1}/{(len(df)-1)//batch_size + 1}")
+            batch = df.iloc[i : i + batch_size]
+            print(f"Processing batch {i // batch_size + 1}/{(len(df) - 1) // batch_size + 1}")
 
             for _, row in batch.iterrows():
                 try:
                     # Determine component_id (use thread_id if it's a thread message, otherwise channel_id)
-                    component_id = str(row['thread_id']) if row['is_thread'] and pd.notna(row['thread_id']) else str(row['channel_id'])
+                    component_id = (
+                        str(row["thread_id"])
+                        if row["is_thread"] and pd.notna(row["thread_id"])
+                        else str(row["channel_id"])
+                    )
 
                     # Parse timestamps
-                    created_at = pd.to_datetime(row['chat_created_at']) if pd.notna(row['chat_created_at']) else None
-                    edited_at = pd.to_datetime(row['chat_edited_at']) if pd.notna(row['chat_edited_at']) else None
+                    created_at = pd.to_datetime(row["chat_created_at"]) if pd.notna(row["chat_created_at"]) else None
+                    edited_at = pd.to_datetime(row["chat_edited_at"]) if pd.notna(row["chat_edited_at"]) else None
 
                     await self.api.upsert_message(
                         org_id=org_id,
                         system=system,
-                        message_id=str(row['message_id']),
+                        message_id=str(row["message_id"]),
                         component_id=component_id,
-                        author_external_id=str(row['discord_user_id']),
-                        content=row['content'] if pd.notna(row['content']) else None,
+                        author_external_id=str(row["discord_user_id"]),
+                        content=row["content"] if pd.notna(row["content"]) else None,
                         created_at=created_at,
                         edited_at=edited_at,
                         raw_data={
                             "migrated_from": "legacy_csv",
-                            "original_channel_name": row['channel_name'],
-                            "original_thread_name": row['thread_name'] if pd.notna(row['thread_name']) else None,
-                            "is_thread": bool(row['is_thread'])
-                        }
+                            "original_channel_name": row["channel_name"],
+                            "original_thread_name": row["thread_name"] if pd.notna(row["thread_name"]) else None,
+                            "is_thread": bool(row["is_thread"]),
+                        },
                     )
                     stats["messages_created"] += 1
 
@@ -153,7 +145,7 @@ class LegacyMigrator:
             "components_count": 0,
             "messages_count": 0,
             "orphaned_messages": 0,
-            "members_with_identities": 0
+            "members_with_identities": 0,
         }
 
         # Check member statistics
@@ -235,10 +227,7 @@ async def main():
         print(f"Found legacy data at {legacy_csv_path}")
 
         # Perform migration
-        migration_stats = await migrator.migrate_legacy_discord_data(
-            csv_path=legacy_csv_path,
-            org_id="migrated-org"
-        )
+        migration_stats = await migrator.migrate_legacy_discord_data(csv_path=legacy_csv_path, org_id="migrated-org")
 
         print(f"\nMigration completed!")
         print(f"Statistics: {migration_stats}")
@@ -261,9 +250,7 @@ async def main():
 
         # Sample member
         member_id = await api.ensure_member_for_discord(
-            org_id="sample-org",
-            discord_user_id="sample_user_123",
-            display_name="Sample User"
+            org_id="sample-org", discord_user_id="sample_user_123", display_name="Sample User"
         )
 
         # Sample component
@@ -272,7 +259,7 @@ async def main():
             system="discord",
             component_id="sample_channel_456",
             component_type="channel",
-            name="sample-channel"
+            name="sample-channel",
         )
 
         # Sample message
@@ -282,7 +269,7 @@ async def main():
             message_id="sample_msg_789",
             component_id="sample_channel_456",
             author_external_id="sample_user_123",
-            content="This is a sample migrated message"
+            content="This is a sample migrated message",
         )
 
         print("Sample data created successfully!")

@@ -49,6 +49,7 @@ class TextInputModal(discord.ui.Modal, title="Provide input"):
 
 class TextPromptView(discord.ui.View):
     """A button that opens a modal to collect multi-line text."""
+
     def __init__(self, timeout: Optional[float], original_author: discord.abc.User, prompt: str) -> None:
         super().__init__(timeout=timeout)
         self.value: Optional[str] = None

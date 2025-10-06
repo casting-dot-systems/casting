@@ -16,8 +16,8 @@ from ..extractors import DiscordOrmExtractor
 
 
 @click.group()
-@click.option('--database-url', envvar='DATABASE_URL', help='Database URL')
-@click.option('--echo/--no-echo', default=False, help='Echo SQL statements')
+@click.option("--database-url", envvar="DATABASE_URL", help="Database URL")
+@click.option("--echo/--no-echo", default=False, help="Echo SQL statements")
 @click.pass_context
 def cli(ctx, database_url: Optional[str], echo: bool):
     """Brain Core CLI - Manage brain data processing operations."""
@@ -26,8 +26,8 @@ def cli(ctx, database_url: Optional[str], echo: bool):
         ctx.exit(1)
 
     ctx.ensure_object(dict)
-    ctx.obj['database_url'] = database_url
-    ctx.obj['echo'] = echo
+    ctx.obj["database_url"] = database_url
+    ctx.obj["echo"] = echo
 
 
 @cli.group()
@@ -41,8 +41,9 @@ def db(ctx):
 @click.pass_context
 def init(ctx):
     """Initialize database with schemas, tables, and functions."""
+
     async def _init():
-        db_manager = DatabaseManager(ctx.obj['database_url'], echo=ctx.obj['echo'])
+        db_manager = DatabaseManager(ctx.obj["database_url"], echo=ctx.obj["echo"])
         migration_manager = MigrationManager(db_manager)
 
         click.echo("Initializing database...")
@@ -58,8 +59,9 @@ def init(ctx):
 @click.pass_context
 def status(ctx):
     """Check database migration status."""
+
     async def _status():
-        db_manager = DatabaseManager(ctx.obj['database_url'], echo=ctx.obj['echo'])
+        db_manager = DatabaseManager(ctx.obj["database_url"], echo=ctx.obj["echo"])
         migration_manager = MigrationManager(db_manager)
 
         status = await migration_manager.check_migration_status()
@@ -95,17 +97,24 @@ def sync(ctx):
 
 
 @sync.command()
-@click.option('--org-id', required=True, help='Organization ID')
-@click.option('--bot-token', envvar='BOT_KEY', help='Discord bot token')
-@click.option('--guild-id', envvar='TEST_SERVER_ID', type=int, help='Discord guild ID')
-@click.option('--message-limit', type=int, help='Limit messages per channel')
-@click.option('--channels-only', is_flag=True, help='Sync only channels, not messages')
+@click.option("--org-id", required=True, help="Organization ID")
+@click.option("--bot-token", envvar="BOT_KEY", help="Discord bot token")
+@click.option("--guild-id", envvar="TEST_SERVER_ID", type=int, help="Discord guild ID")
+@click.option("--message-limit", type=int, help="Limit messages per channel")
+@click.option("--channels-only", is_flag=True, help="Sync only channels, not messages")
 @click.pass_context
-def discord(ctx, org_id: str, bot_token: Optional[str], guild_id: Optional[int],
-           message_limit: Optional[int], channels_only: bool):
+def discord(
+    ctx,
+    org_id: str,
+    bot_token: Optional[str],
+    guild_id: Optional[int],
+    message_limit: Optional[int],
+    channels_only: bool,
+):
     """Sync Discord data to database."""
+
     async def _sync_discord():
-        db_manager = DatabaseManager(ctx.obj['database_url'], echo=ctx.obj['echo'])
+        db_manager = DatabaseManager(ctx.obj["database_url"], echo=ctx.obj["echo"])
         api = BrainCoreAPI(db_manager)
         extractor = DiscordOrmExtractor(api, org_id, bot_token, guild_id)
 
@@ -131,20 +140,27 @@ def export(ctx):
 
 
 @export.command()
-@click.option('--output', '-o', required=True, help='Output file path')
-@click.option('--component-id', help='Filter by component ID')
-@click.option('--system', help='Filter by system')
-@click.option('--start-date', help='Start date (YYYY-MM-DD)')
-@click.option('--end-date', help='End date (YYYY-MM-DD)')
+@click.option("--output", "-o", required=True, help="Output file path")
+@click.option("--component-id", help="Filter by component ID")
+@click.option("--system", help="Filter by system")
+@click.option("--start-date", help="Start date (YYYY-MM-DD)")
+@click.option("--end-date", help="End date (YYYY-MM-DD)")
 @click.pass_context
-def messages(ctx, output: str, component_id: Optional[str], system: Optional[str],
-            start_date: Optional[str], end_date: Optional[str]):
+def messages(
+    ctx,
+    output: str,
+    component_id: Optional[str],
+    system: Optional[str],
+    start_date: Optional[str],
+    end_date: Optional[str],
+):
     """Export messages to CSV file."""
+
     async def _export_messages():
         from datetime import datetime
         import pandas as pd
 
-        db_manager = DatabaseManager(ctx.obj['database_url'], echo=ctx.obj['echo'])
+        db_manager = DatabaseManager(ctx.obj["database_url"], echo=ctx.obj["echo"])
         api = BrainCoreAPI(db_manager)
 
         # Parse dates
@@ -153,10 +169,7 @@ def messages(ctx, output: str, component_id: Optional[str], system: Optional[str
 
         click.echo("Exporting messages...")
         df = await api.export_messages_to_dataframe(
-            component_id=component_id,
-            system=system,
-            start_date=start_dt,
-            end_date=end_dt
+            component_id=component_id, system=system, start_date=start_dt, end_date=end_dt
         )
 
         df.to_csv(output, index=False)
@@ -168,13 +181,14 @@ def messages(ctx, output: str, component_id: Optional[str], system: Optional[str
 
 
 @cli.command()
-@click.option('--system', help='Filter by system')
-@click.option('--component-type', help='Filter by component type')
+@click.option("--system", help="Filter by system")
+@click.option("--component-type", help="Filter by component type")
 @click.pass_context
 def stats(ctx, system: Optional[str], component_type: Optional[str]):
     """Show component statistics."""
+
     async def _stats():
-        db_manager = DatabaseManager(ctx.obj['database_url'], echo=ctx.obj['echo'])
+        db_manager = DatabaseManager(ctx.obj["database_url"], echo=ctx.obj["echo"])
         api = BrainCoreAPI(db_manager)
 
         stats = await api.get_component_stats(system, component_type)
@@ -196,6 +210,6 @@ def stats(ctx, system: Optional[str], component_type: Optional[str]):
     asyncio.run(_stats())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     load_dotenv()
     cli()

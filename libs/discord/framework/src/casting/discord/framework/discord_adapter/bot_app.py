@@ -19,6 +19,7 @@ class EngineRunner(Protocol):
     async def run_engine(self, context: ChatContext, session_id: str) -> Any:  # pragma: no cover - interface
         ...
 
+
 class DiscordBotApp:
     """
     Discord adapter that:
@@ -84,21 +85,18 @@ class DiscordBotApp:
         # print(f"Collected context: {ctx}")
 
         # Run engine and send exactly one final reply
-        result = await self._engine.run_engine(ctx, sid)
+        result = await self._engine.run_engine(ctx, sid, max_length=self._config.max_response_length)
 
-        # Duck-typed result: expect `success`, `result`, `error`
-        ok = bool(getattr(result, "success", True))
-        payload = getattr(result, "result", None)
-        err = getattr(result, "error", None)
+        if not getattr(result, "success", True) and getattr(result, "metadata", {}).get("delivery_failed"):
+            err = getattr(result, "error", None) or "Unknown error"
+            await message.reply(f"❌ Error: {err}")
 
-        if ok and payload is not None:
-            await message.reply(str(payload)[: self._config.max_response_length])
-        elif ok:
-            await message.reply("✅ Done.")
-        else:
-            await message.reply(f"❌ Error: {err or 'Unknown error'}")
-
-        await self._sessions.complete(sid, "Session completed")
+        final_status = (
+            "Response sent"
+            if getattr(result, "success", True)
+            else f"Error: {getattr(result, 'error', 'Unknown error')}"
+        )
+        await self._sessions.complete(sid, final_status)
 
     async def start(self) -> None:
         await self._bot.start(self._config.bot_token)

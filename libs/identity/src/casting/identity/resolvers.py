@@ -10,16 +10,12 @@ from .operations import get_member_from_identity
 from .types import MemberWithIdentities
 
 
-def get_member_from_discord_id(
-    conn: Connection | Engine, discord_id: str
-) -> Optional[MemberWithIdentities]:
+def get_member_from_discord_id(conn: Connection | Engine, discord_id: str) -> Optional[MemberWithIdentities]:
     """Resolve a member by Discord ID."""
     return get_member_from_identity(conn, "discord", discord_id)
 
 
-def get_member_from_notion_id(
-    conn: Connection | Engine, notion_id: str
-) -> Optional[MemberWithIdentities]:
+def get_member_from_notion_id(conn: Connection | Engine, notion_id: str) -> Optional[MemberWithIdentities]:
     """Resolve a member by Notion ID."""
     return get_member_from_identity(conn, "notion", notion_id)
 

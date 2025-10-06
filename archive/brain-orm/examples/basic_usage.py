@@ -45,10 +45,7 @@ async def main():
     # Example 1: Create/get a member
     print("\n=== Example 1: Member Management ===")
     member_id = await api.ensure_member_for_discord(
-        org_id="example-org",
-        discord_user_id="123456789",
-        display_name="John Doe",
-        email="john@example.com"
+        org_id="example-org", discord_user_id="123456789", display_name="John Doe", email="john@example.com"
     )
     print(f"Created/found member with ID: {member_id}")
 
@@ -68,7 +65,7 @@ async def main():
         component_id="987654321",
         component_type="channel",
         name="general",
-        raw_data={"description": "General discussion channel"}
+        raw_data={"description": "General discussion channel"},
     )
     print(f"Created component: {channel.name}")
 
@@ -80,16 +77,13 @@ async def main():
         component_id="987654321",
         author_external_id="123456789",
         content="Hello, world! This is a test message.",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     print(f"Created message: {message.content[:50]}...")
 
     # Add a reaction to the message
     reaction = await api.add_reaction(
-        message_id="msg_123456",
-        reaction="👍",
-        member_external_id="123456789",
-        system="discord"
+        message_id="msg_123456", reaction="👍", member_external_id="123456789", system="discord"
     )
     print(f"Added reaction: {reaction.reaction}")
 
@@ -98,11 +92,7 @@ async def main():
 
     # Get messages from the component
     messages = await api.get_messages(
-        component_id="987654321",
-        system="discord",
-        limit=10,
-        include_reactions=True,
-        include_author=True
+        component_id="987654321", system="discord", limit=10, include_reactions=True, include_author=True
     )
     print(f"Found {len(messages)} messages")
     for msg in messages:
@@ -120,10 +110,7 @@ async def main():
     print("\n=== Example 4: Data Export ===")
 
     # Export messages to pandas DataFrame
-    df = await api.export_messages_to_dataframe(
-        system="discord",
-        start_date=datetime.utcnow() - timedelta(days=30)
-    )
+    df = await api.export_messages_to_dataframe(system="discord", start_date=datetime.utcnow() - timedelta(days=30))
     print(f"Exported {len(df)} messages to DataFrame")
     print("DataFrame columns:", list(df.columns))
 
@@ -156,6 +143,7 @@ async def main():
 if __name__ == "__main__":
     # Load environment variables from .env file
     from dotenv import load_dotenv
+
     load_dotenv()
 
     # Run the example

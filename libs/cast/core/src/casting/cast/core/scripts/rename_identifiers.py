@@ -21,9 +21,7 @@ yaml.default_flow_style = False
 @dataclass
 class RenameIdentifiersScript:
     slug: str = "rename-identifiers"
-    description: str = (
-        "Rename 'cast-id' front matter fields to 'id' and remove legacy version metadata."
-    )
+    description: str = "Rename 'cast-id' front matter fields to 'id' and remove legacy version metadata."
 
     def run(self, ctx: ScriptContext) -> ScriptResult:
         root = ctx.root.expanduser().resolve()

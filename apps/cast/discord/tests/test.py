@@ -42,22 +42,25 @@ def test_none_values():
 
 class TestBasicClass:
     """Test class to verify class-based tests work."""
-    
+
     def test_class_method(self):
         """Test method within a class."""
         assert "test" == "test"
-    
+
     def test_class_setup(self):
         """Test class setup functionality."""
         self.value = 42
         assert self.value == 42
 
 
-@pytest.mark.parametrize("input_val,expected", [
-    (1, 1),
-    (2, 2),
-    ("hello", "hello"),
-])
+@pytest.mark.parametrize(
+    "input_val,expected",
+    [
+        (1, 1),
+        (2, 2),
+        ("hello", "hello"),
+    ],
+)
 def test_parametrized(input_val, expected):
     """Test parametrized test functionality."""
     assert input_val == expected

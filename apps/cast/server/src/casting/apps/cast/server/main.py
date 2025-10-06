@@ -10,13 +10,17 @@ app = FastAPI(title="Markdown File API", description="API for managing markdown 
 app.include_router(markdown_router)
 app.include_router(git_router)
 
+
 @app.get("/")
 async def root():
     return {"message": "Markdown File API"}
 
+
 def main():
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 
 if __name__ == "__main__":
     main()

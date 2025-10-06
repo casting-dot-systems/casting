@@ -1,4 +1,3 @@
-
 import uuid
 from sqlalchemy import text
 
@@ -9,19 +8,22 @@ def test_create_and_list_identities(client, db_session):
     member_id = str(uuid.uuid4())
     db_session.execute(
         text("INSERT INTO catalog_members (member_id, name, status) VALUES (:id, :name, :status)"),
-        {"id": member_id, "name": "Alice", "status": "active"}
+        {"id": member_id, "name": "Alice", "status": "active"},
     )
     db_session.commit()
 
     # Create identity
-    response = client.post("/identities", json={
-        "entity_type": "member",
-        "entity_id": member_id,
-        "application": "email",
-        "external_id": "alice@example.com",
-        "display_name": "Alice (email)",
-        "is_primary": True
-    })
+    response = client.post(
+        "/identities",
+        json={
+            "entity_type": "member",
+            "entity_id": member_id,
+            "application": "email",
+            "external_id": "alice@example.com",
+            "display_name": "Alice (email)",
+            "is_primary": True,
+        },
+    )
     assert response.status_code == 201
     identity = response.json()
     assert identity["application"] == "email"
@@ -46,27 +48,33 @@ def test_resolve_member(client, db_session):
     member_id = str(uuid.uuid4())
     db_session.execute(
         text("INSERT INTO catalog_members (member_id, name, status) VALUES (:id, :name, :status)"),
-        {"id": member_id, "name": "Bob", "status": "active"}
+        {"id": member_id, "name": "Bob", "status": "active"},
     )
     db_session.commit()
 
     # Create identities
-    client.post("/identities", json={
-        "entity_type": "member",
-        "entity_id": member_id,
-        "application": "email",
-        "external_id": "bob@example.com",
-        "display_name": "Bob (email)",
-        "is_primary": True
-    })
+    client.post(
+        "/identities",
+        json={
+            "entity_type": "member",
+            "entity_id": member_id,
+            "application": "email",
+            "external_id": "bob@example.com",
+            "display_name": "Bob (email)",
+            "is_primary": True,
+        },
+    )
 
-    client.post("/identities", json={
-        "entity_type": "member",
-        "entity_id": member_id,
-        "application": "discord",
-        "external_id": "9876543210",
-        "display_name": "bob#1234"
-    })
+    client.post(
+        "/identities",
+        json={
+            "entity_type": "member",
+            "entity_id": member_id,
+            "application": "discord",
+            "external_id": "9876543210",
+            "display_name": "bob#1234",
+        },
+    )
 
     # Resolve member
     response = client.get(f"/resolve/member/{member_id}")
@@ -85,24 +93,25 @@ def test_update_and_delete_identity(client, db_session):
     member_id = str(uuid.uuid4())
     db_session.execute(
         text("INSERT INTO catalog_members (member_id, name, status) VALUES (:id, :name, :status)"),
-        {"id": member_id, "name": "Charlie", "status": "active"}
+        {"id": member_id, "name": "Charlie", "status": "active"},
     )
     db_session.commit()
 
     # Create identity
-    response = client.post("/identities", json={
-        "entity_type": "member",
-        "entity_id": member_id,
-        "application": "notion",
-        "external_id": "page123",
-        "display_name": "Charlie's Notion"
-    })
+    response = client.post(
+        "/identities",
+        json={
+            "entity_type": "member",
+            "entity_id": member_id,
+            "application": "notion",
+            "external_id": "page123",
+            "display_name": "Charlie's Notion",
+        },
+    )
     identity_id = response.json()["id"]
 
     # Update identity
-    response = client.patch(f"/identities/{identity_id}", json={
-        "display_name": "Updated Notion"
-    })
+    response = client.patch(f"/identities/{identity_id}", json={"display_name": "Updated Notion"})
     assert response.status_code == 200
     assert response.json()["display_name"] == "Updated Notion"
 

@@ -7,10 +7,12 @@ from .models import GitCommit, GitMerge, GitPush, GitBranch, GitRemote
 
 router = APIRouter(prefix="/git", tags=["git"])
 
+
 def get_git_folder() -> Path:
     """Get the configured git folder path from environment variables"""
-    folder_path = os.getenv('GIT_FOLDER_PATH', './')
+    folder_path = os.getenv("GIT_FOLDER_PATH", "./")
     return Path(folder_path)
+
 
 def execute_git_command(command: list, cwd: Optional[Path] = None) -> Dict[str, Any]:
     """Execute a git command in the specified directory with error handling"""
@@ -18,34 +20,19 @@ def execute_git_command(command: list, cwd: Optional[Path] = None) -> Dict[str, 
         cwd = get_git_folder()
 
     try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=30)
 
         return {
             "success": result.returncode == 0,
             "stdout": result.stdout.strip(),
             "stderr": result.stderr.strip(),
-            "returncode": result.returncode
+            "returncode": result.returncode,
         }
     except subprocess.TimeoutExpired:
-        return {
-            "success": False,
-            "stdout": "",
-            "stderr": "Command timed out",
-            "returncode": -1
-        }
+        return {"success": False, "stdout": "", "stderr": "Command timed out", "returncode": -1}
     except Exception as e:
-        return {
-            "success": False,
-            "stdout": "",
-            "stderr": str(e),
-            "returncode": -1
-        }
+        return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
+
 
 @router.post("/add")
 async def git_add():
@@ -56,6 +43,7 @@ async def git_add():
         raise HTTPException(status_code=500, detail=f"Git add failed: {result['stderr']}")
 
     return {"message": "All changes staged successfully", "output": result["stdout"]}
+
 
 @router.post("/commit")
 async def git_commit(commit_data: GitCommit):
@@ -73,6 +61,7 @@ async def git_commit(commit_data: GitCommit):
         raise HTTPException(status_code=500, detail=f"Git commit failed: {result['stderr']}")
 
     return {"message": "Commit created successfully", "output": result["stdout"]}
+
 
 @router.post("/push")
 async def git_push(push_data: GitPush):
@@ -92,7 +81,7 @@ async def git_push(push_data: GitPush):
     result = execute_git_command(command)
 
     if not result["success"]:
-        error_msg = result['stderr']
+        error_msg = result["stderr"]
 
         # Check for common push errors and provide helpful messages
         if "no upstream branch" in error_msg.lower():
@@ -100,29 +89,26 @@ async def git_push(push_data: GitPush):
                 "success": False,
                 "error": "No upstream branch set. Try again with set_upstream=true or configure remote repository first.",
                 "suggestion": "Use set_upstream=true parameter or run: git remote add origin <repository-url>",
-                "detailed_error": error_msg
+                "detailed_error": error_msg,
             }
         elif "remote rejected" in error_msg.lower():
             return {
                 "success": False,
                 "error": "Push rejected by remote repository. Check permissions or branch protection rules.",
-                "detailed_error": error_msg
+                "detailed_error": error_msg,
             }
         elif "failed to push" in error_msg.lower():
             return {
                 "success": False,
                 "error": "Failed to push. Repository may not exist or you don't have access.",
                 "suggestion": "Verify remote repository URL and access permissions",
-                "detailed_error": error_msg
+                "detailed_error": error_msg,
             }
         else:
-            return {
-                "success": False,
-                "error": f"Git push failed: {error_msg}",
-                "detailed_error": error_msg
-            }
+            return {"success": False, "error": f"Git push failed: {error_msg}", "detailed_error": error_msg}
 
     return {"message": "Push completed successfully", "output": result["stdout"]}
+
 
 @router.post("/pull")
 async def git_pull(remote: str = "origin", branch: str = None):
@@ -135,7 +121,7 @@ async def git_pull(remote: str = "origin", branch: str = None):
     result = execute_git_command(command)
 
     if not result["success"]:
-        error_msg = result['stderr']
+        error_msg = result["stderr"]
 
         # Check for common pull errors and provide helpful messages
         if "merge conflict" in error_msg.lower() or "conflict" in error_msg.lower():
@@ -144,30 +130,27 @@ async def git_pull(remote: str = "origin", branch: str = None):
                 "error": "Merge conflicts detected during pull",
                 "suggestion": "Resolve conflicts manually or use git reset --hard to discard local changes",
                 "conflicts": True,
-                "detailed_error": error_msg
+                "detailed_error": error_msg,
             }
         elif "divergent branches" in error_msg.lower():
             return {
                 "success": False,
                 "error": "Local and remote branches have diverged",
                 "suggestion": "Consider using git pull --rebase or merge manually",
-                "detailed_error": error_msg
+                "detailed_error": error_msg,
             }
         elif "no such remote" in error_msg.lower():
             return {
                 "success": False,
                 "error": f"Remote '{remote}' does not exist",
                 "suggestion": "Check remote name with git remote -v or add remote first",
-                "detailed_error": error_msg
+                "detailed_error": error_msg,
             }
         else:
-            return {
-                "success": False,
-                "error": f"Git pull failed: {error_msg}",
-                "detailed_error": error_msg
-            }
+            return {"success": False, "error": f"Git pull failed: {error_msg}", "detailed_error": error_msg}
 
     return {"message": "Pull completed successfully", "output": result["stdout"]}
+
 
 @router.get("/status")
 async def git_status():
@@ -180,10 +163,11 @@ async def git_status():
     status_result = execute_git_command(["git", "status"])
 
     return {
-        "short_status": result["stdout"].split('\n') if result["stdout"] else [],
+        "short_status": result["stdout"].split("\n") if result["stdout"] else [],
         "full_status": status_result["stdout"],
-        "clean": not result["stdout"]
+        "clean": not result["stdout"],
     }
+
 
 @router.get("/log")
 async def git_log(limit: int = 10):
@@ -193,9 +177,10 @@ async def git_log(limit: int = 10):
     if not result["success"]:
         raise HTTPException(status_code=500, detail=f"Git log failed: {result['stderr']}")
 
-    commits = result["stdout"].split('\n') if result["stdout"] else []
+    commits = result["stdout"].split("\n") if result["stdout"] else []
 
     return {"commits": commits, "total": len(commits)}
+
 
 @router.post("/merge")
 async def git_merge(merge_data: GitMerge):
@@ -209,21 +194,24 @@ async def git_merge(merge_data: GitMerge):
         if merge_data.allow_conflicts:
             add_result = execute_git_command(["git", "add", "."])
             if add_result["success"]:
-                commit_result = execute_git_command(["git", "commit", "-m", f"Merge {merge_data.branch_name} with conflicts"])
+                commit_result = execute_git_command(
+                    ["git", "commit", "-m", f"Merge {merge_data.branch_name} with conflicts"]
+                )
                 if commit_result["success"]:
                     return {
                         "message": f"Merged {merge_data.branch_name} with conflicts staged and committed",
                         "conflicts": True,
-                        "output": result["stdout"] + "\n" + commit_result["stdout"]
+                        "output": result["stdout"] + "\n" + commit_result["stdout"],
                     }
 
         return {
             "message": f"Merge conflicts detected in {merge_data.branch_name}",
             "conflicts": True,
-            "output": result["stdout"] + "\n" + result["stderr"]
+            "output": result["stdout"] + "\n" + result["stderr"],
         }
 
     raise HTTPException(status_code=500, detail=f"Git merge failed: {result['stderr']}")
+
 
 @router.post("/branch")
 async def git_create_branch(branch_data: GitBranch):
@@ -234,6 +222,7 @@ async def git_create_branch(branch_data: GitBranch):
         raise HTTPException(status_code=500, detail=f"Git branch creation failed: {result['stderr']}")
 
     return {"message": f"Branch {branch_data.branch_name} created successfully", "output": result["stdout"]}
+
 
 @router.get("/branch")
 async def git_list_branches():
@@ -246,15 +235,16 @@ async def git_list_branches():
     branches = []
     current_branch = None
 
-    for line in result["stdout"].split('\n'):
+    for line in result["stdout"].split("\n"):
         if line.strip():
-            if line.startswith('* '):
+            if line.startswith("* "):
                 current_branch = line[2:].strip()
                 branches.append({"name": current_branch, "current": True})
             else:
                 branches.append({"name": line.strip(), "current": False})
 
     return {"branches": branches, "current_branch": current_branch}
+
 
 @router.post("/checkout")
 async def git_checkout(branch_data: GitBranch):
@@ -265,6 +255,7 @@ async def git_checkout(branch_data: GitBranch):
         raise HTTPException(status_code=500, detail=f"Git checkout failed: {result['stderr']}")
 
     return {"message": f"Switched to branch {branch_data.branch_name}", "output": result["stdout"]}
+
 
 @router.get("/diff")
 async def git_diff(staged: bool = False):
@@ -278,11 +269,8 @@ async def git_diff(staged: bool = False):
     if not result["success"]:
         raise HTTPException(status_code=500, detail=f"Git diff failed: {result['stderr']}")
 
-    return {
-        "diff": result["stdout"],
-        "staged": staged,
-        "has_changes": bool(result["stdout"])
-    }
+    return {"diff": result["stdout"], "staged": staged, "has_changes": bool(result["stdout"])}
+
 
 @router.post("/remote")
 async def git_add_remote(remote_data: GitRemote):
@@ -294,14 +282,12 @@ async def git_add_remote(remote_data: GitRemote):
             return {
                 "success": False,
                 "error": f"Remote '{remote_data.remote_name}' already exists",
-                "suggestion": f"Use 'git remote set-url {remote_data.remote_name} {remote_data.remote_url}' to update"
+                "suggestion": f"Use 'git remote set-url {remote_data.remote_name} {remote_data.remote_url}' to update",
             }
-        return {
-            "success": False,
-            "error": f"Failed to add remote: {result['stderr']}"
-        }
+        return {"success": False, "error": f"Failed to add remote: {result['stderr']}"}
 
     return {"message": f"Remote {remote_data.remote_name} added successfully", "output": result["stdout"]}
+
 
 @router.get("/remote")
 async def git_list_remotes():
@@ -309,14 +295,11 @@ async def git_list_remotes():
     result = execute_git_command(["git", "remote", "-v"])
 
     if not result["success"]:
-        return {
-            "success": False,
-            "error": f"Failed to list remotes: {result['stderr']}"
-        }
+        return {"success": False, "error": f"Failed to list remotes: {result['stderr']}"}
 
     remotes = []
     if result["stdout"]:
-        for line in result["stdout"].split('\n'):
+        for line in result["stdout"].split("\n"):
             if line.strip():
                 parts = line.split()
                 if len(parts) >= 2:
@@ -327,6 +310,7 @@ async def git_list_remotes():
 
     return {"remotes": remotes, "count": len(remotes)}
 
+
 @router.get("/conflicts")
 async def git_get_conflicts():
     """Get detailed information about merge conflicts"""
@@ -334,20 +318,12 @@ async def git_get_conflicts():
     result = execute_git_command(["git", "diff", "--name-only", "--diff-filter=U"])
 
     if not result["success"]:
-        return {
-            "success": False,
-            "error": f"Failed to get conflict info: {result['stderr']}"
-        }
+        return {"success": False, "error": f"Failed to get conflict info: {result['stderr']}"}
 
-    conflicted_files = [f.strip() for f in result["stdout"].split('\n') if f.strip()]
+    conflicted_files = [f.strip() for f in result["stdout"].split("\n") if f.strip()]
 
     if not conflicted_files:
-        return {
-            "success": True,
-            "has_conflicts": False,
-            "files": [],
-            "message": "No merge conflicts found"
-        }
+        return {"success": True, "has_conflicts": False, "files": [], "message": "No merge conflicts found"}
 
     # Get conflict details for each file
     conflicts_info = []
@@ -355,23 +331,14 @@ async def git_get_conflicts():
         # Get the conflicted content
         conflict_result = execute_git_command(["git", "show", f":{file}"], cwd=get_git_folder())
         if conflict_result["success"]:
-            conflicts_info.append({
-                "file": file,
-                "content": conflict_result["stdout"],
-                "status": "conflicted"
-            })
+            conflicts_info.append({"file": file, "content": conflict_result["stdout"], "status": "conflicted"})
         else:
-            conflicts_info.append({
-                "file": file,
-                "content": "",
-                "status": "error",
-                "error": conflict_result["stderr"]
-            })
+            conflicts_info.append({"file": file, "content": "", "status": "error", "error": conflict_result["stderr"]})
 
     return {
         "success": True,
         "has_conflicts": True,
         "files": conflicts_info,
         "count": len(conflicted_files),
-        "message": f"Found {len(conflicted_files)} conflicted file(s)"
+        "message": f"Found {len(conflicted_files)} conflicted file(s)",
     }

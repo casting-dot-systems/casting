@@ -9,6 +9,7 @@ Auth precedence:
   1) Service account via GOOGLE_APPLICATION_CREDENTIALS
   2) OAuth client in .cast/google/client_secret.json (token cached as .cast/google/token.json)
 """
+
 from __future__ import annotations
 
 import os
@@ -154,11 +155,11 @@ def _build_services(root: Path):
 def _resolve_folder_id(drive, folder_id: str) -> str:
     """Resolve shortcuts and validate Shared Drive folders."""
     try:
-        meta = drive.files().get(
-            fileId=folder_id,
-            fields="id, mimeType, driveId, shortcutDetails",
-            supportsAllDrives=True
-        ).execute()
+        meta = (
+            drive.files()
+            .get(fileId=folder_id, fields="id, mimeType, driveId, shortcutDetails", supportsAllDrives=True)
+            .execute()
+        )
     except Exception as e:
         console.print(f"[red]Error accessing folder {folder_id}:[/red] {e}")
         raise typer.Exit(2)
@@ -167,11 +168,7 @@ def _resolve_folder_id(drive, folder_id: str) -> str:
     if meta.get("mimeType") == "application/vnd.google-apps.shortcut":
         target_id = meta["shortcutDetails"]["targetId"]
         try:
-            meta = drive.files().get(
-                fileId=target_id,
-                fields="id, mimeType, driveId",
-                supportsAllDrives=True
-            ).execute()
+            meta = drive.files().get(fileId=target_id, fields="id, mimeType, driveId", supportsAllDrives=True).execute()
         except Exception as e:
             console.print(f"[red]Error accessing shortcut target {target_id}:[/red] {e}")
             raise typer.Exit(2)
@@ -186,24 +183,20 @@ def _resolve_folder_id(drive, folder_id: str) -> str:
             "Use a Shared Drive folder to avoid service-account quota issues."
         )
         raise typer.Exit(2)
-    
+
     return meta["id"]
 
 
 def _create_google_doc(drive, title: str, parent_folder_id: Optional[str]) -> tuple[str, str]:
     """Create a Google Doc with proper Shared Drive support."""
     from googleapiclient.errors import HttpError
-    
+
     body = {"name": title, "mimeType": "application/vnd.google-apps.document"}
     if parent_folder_id:
         body["parents"] = [parent_folder_id]
-    
+
     try:
-        file = drive.files().create(
-            body=body, 
-            fields="id,webViewLink", 
-            supportsAllDrives=True
-        ).execute()
+        file = drive.files().create(body=body, fields="id,webViewLink", supportsAllDrives=True).execute()
     except HttpError as e:
         if e.resp.status == 403 and "storageQuotaExceeded" in str(e):
             console.print(
@@ -215,7 +208,7 @@ def _create_google_doc(drive, title: str, parent_folder_id: Optional[str]) -> tu
             )
             raise typer.Exit(2)
         raise
-    
+
     doc_id = file["id"]
     url = file.get("webViewLink", f"https://docs.google.com/document/d/{doc_id}/edit")
     return doc_id, url
@@ -299,11 +292,7 @@ def _pull_one_note(drive, docs, file: Path) -> Tuple[bool, Optional[str]]:
 def _canonical_doc_url(drive, doc_id: str) -> str:
     """Return a stable webViewLink for the Doc; fallback to a standard edit URL."""
     try:
-        file = drive.files().get(
-            fileId=doc_id,
-            fields="webViewLink",
-            supportsAllDrives=True
-        ).execute()
+        file = drive.files().get(fileId=doc_id, fields="webViewLink", supportsAllDrives=True).execute()
         url = file.get("webViewLink")
         if url:
             return url
@@ -325,15 +314,9 @@ def _fetch_doc_title(docs, doc_id: str) -> Optional[str]:
 @gdoc_app.command("add")
 def gdoc_add(
     doc_url: str = typer.Argument(..., help="URL to an existing Google Doc"),
-    title: Optional[str] = typer.Option(
-        None, "--title", "-t", help="Override note title; otherwise use the Doc title"
-    ),
-    dir: Path = typer.Option(
-        Path("."), "--dir", help="Cast-relative directory to place the note"
-    ),
-    overwrite: bool = typer.Option(
-        True, "--overwrite/--no-overwrite", help="Overwrite the note if it already exists"
-    ),
+    title: Optional[str] = typer.Option(None, "--title", "-t", help="Override note title; otherwise use the Doc title"),
+    dir: Path = typer.Option(Path("."), "--dir", help="Cast-relative directory to place the note"),
+    overwrite: bool = typer.Option(True, "--overwrite/--no-overwrite", help="Overwrite the note if it already exists"),
     auto_pull: bool = typer.Option(
         True, "--auto-pull/--no-auto-pull", help="Automatically pull content after creating the note"
     ),
@@ -382,7 +365,7 @@ def gdoc_add(
 
     console.print(f"[green]✔ Linked existing Google Doc[/green]: {url}")
     console.print(f"[green]✔ Wrote note[/green]: {note_path}")
-    
+
     # Auto-pull content if requested
     if auto_pull:
         console.print("[blue]Auto-pulling content...[/blue]")
@@ -400,9 +383,7 @@ def gdoc_new(
     title: str = typer.Argument(..., help="Title for the new note & Google Doc"),
     dir: Path = typer.Option(Path("."), "--dir", help="Cast-relative directory for the note"),
     folder_id: Optional[str] = typer.Option(None, "--folder-id", help="Drive folderId for the Doc"),
-    share_with: List[str] = typer.Option(
-        [], "--share-with", help="Email(s) to grant writer access to the Doc"
-    ),
+    share_with: List[str] = typer.Option([], "--share-with", help="Email(s) to grant writer access to the Doc"),
     auto_pull: bool = typer.Option(
         False, "--auto-pull/--no-auto-pull", help="Automatically pull content after creating the Doc"
     ),
@@ -412,7 +393,7 @@ def gdoc_new(
     Optionally auto-pulls the content immediately (useful if the Doc has initial content).
     """
     root, vault = _get_root_and_vault()
-    
+
     # Fail fast if using a service account without a Shared Drive folder
     is_sa = bool(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"))
     if is_sa and not folder_id:
@@ -421,7 +402,7 @@ def gdoc_new(
             "Add the SA as Content manager on that Shared Drive and pass its folder ID."
         )
         raise typer.Exit(2)
-    
+
     drive, docs = _build_services(root)
 
     # Resolve and validate folder ID if provided
@@ -465,7 +446,7 @@ def gdoc_new(
 
     console.print(f"[green]✔ Created Google Doc[/green]: {url}")
     console.print(f"[green]✔ Wrote note[/green]: {note_path}")
-    
+
     # Auto-pull content if requested
     if auto_pull:
         console.print("[blue]Auto-pulling content...[/blue]")
@@ -481,12 +462,10 @@ def gdoc_new(
 @gdoc_app.command("pull")
 def gdoc_pull(
     file: Optional[Path] = typer.Argument(
-        None,
-        help="Path to local Cast note (Markdown). Omit and use --all to pull every GDoc note."
+        None, help="Path to local Cast note (Markdown). Omit and use --all to pull every GDoc note."
     ),
     all_: bool = typer.Option(
-        False, "--all", "-a", "--a",
-        help="Pull all GDoc notes in the cast (files prefixed with '(GDoc) ')."
+        False, "--all", "-a", "--a", help="Pull all GDoc notes in the cast (files prefixed with '(GDoc) ')."
     ),
 ):
     """

@@ -208,7 +208,10 @@ def to_message_info(msg: discord.Message) -> MessageInfo:
         content=msg.content,
         id=str(msg.id),
         mentions=[to_author_info(u) for u in msg.mentions],
-        attachments=[AttachmentInfo(filename=a.filename, url=a.url, content_type=a.content_type, size=a.size) for a in msg.attachments],
+        attachments=[
+            AttachmentInfo(filename=a.filename, url=a.url, content_type=a.content_type, size=a.size)
+            for a in msg.attachments
+        ],
         embeds=embeds,
         components=components,
         reactions=reactions,

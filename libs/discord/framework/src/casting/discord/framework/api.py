@@ -207,9 +207,7 @@ class DiscordAgentAPI:
             channel=to_channel_info(message.channel),
             guild=to_guild_info(message.guild),
             mentions=[to_author_info(u) for u in message.mentions],
-            attachments=[
-                _attachment_from_discord(a) for a in message.attachments
-            ],
+            attachments=[_attachment_from_discord(a) for a in message.attachments],
             reply_to=to_message_info(replied_message) if replied_message else None,
             recent_messages=[to_message_info(m) for m in recent],
         )

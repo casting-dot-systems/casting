@@ -41,9 +41,7 @@ class LocalConfig(BaseModel):
 
     path_to_root: str = Field(description="Absolute path to Root", alias="path-to-root")
     installed_vaults: list[InstalledVault] = Field(default_factory=list, alias="installed-vaults")
-    installed_codebases: list[InstalledCodebase] = Field(
-        default_factory=list, alias="installed-codebases"
-    )
+    installed_codebases: list[InstalledCodebase] = Field(default_factory=list, alias="installed-codebases")
 
 
 class VaultMode(TypedDict):
@@ -78,9 +76,7 @@ class SyncState(BaseModel):
 
     version: int = Field(default=1)
     updated_at: str = Field(description="Last update timestamp")
-    baselines: dict[str, dict[str, SyncStateEntry]] = Field(
-        default_factory=dict, description="id -> peer -> baseline"
-    )
+    baselines: dict[str, dict[str, SyncStateEntry]] = Field(default_factory=dict, description="id -> peer -> baseline")
 
 
 class CastFrontMatter(TypedDict, total=False):
