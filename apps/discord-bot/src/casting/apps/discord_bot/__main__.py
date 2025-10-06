@@ -1,15 +1,13 @@
-from __future__ import annotations
-
 import asyncio
 import os
 from pathlib import Path
+import os
 
 from casting.discord.framework.discord_adapter import DiscordBotApp, DiscordConfig
 from casting.discord.framework.discord_adapter.session_manager import SessionManager
 from casting.discord.framework.testing import DotenvManager, find_workspace_root
 
 from casting.apps.discord_bot.engine_bridge import DarcyEngineBridge
-
 
 def _engine_factory(sessions: SessionManager) -> DarcyEngineBridge:
     return DarcyEngineBridge(sessions)

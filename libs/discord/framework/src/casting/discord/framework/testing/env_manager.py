@@ -8,7 +8,6 @@ import os
 
 from dotenv import dotenv_values
 
-
 @dataclass(slots=True)
 class DotenvLayer:
     name: str
@@ -82,3 +81,4 @@ def find_workspace_root(start: Path | None = None) -> Path:
         if (candidate / ".git").exists():
             return candidate
     raise RuntimeError("Unable to locate workspace root (.git directory not found)")
+

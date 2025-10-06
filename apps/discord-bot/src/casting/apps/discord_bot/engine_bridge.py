@@ -9,7 +9,6 @@ from casting.discord.framework import (
     DiscordAgentRuntime,
     OutboundMessage,
     PromptRequestCommand,
-    SendMessageCommand,
     StatusEvent,
 )
 from casting.discord.framework.discord_adapter.context import build_chat_context_from_message
@@ -156,12 +155,12 @@ class DarcyEngineBridge:
             if max_length is not None:
                 content = content[:max_length]
             outbound = OutboundMessage(content=content, reference=reference)
-            send_cmd = SendMessageCommand(channel_id=str(channel_id), message=outbound, session_id=sid_key)
-            send_result = await bus.execute(send_cmd)
-            if not send_result.success:
+            try:
+                await self._api.send_message(str(channel_id), outbound)
+            except Exception as exc:  # pragma: no cover - network state
                 return CommandResult(
                     success=False,
-                    error=send_result.error or "Failed to send response",
+                    error=str(exc) or "Failed to send response",
                     result=engine_result.result,
                     session_id=sid_key,
                     metadata={"delivery_failed": True},
@@ -172,8 +171,10 @@ class DarcyEngineBridge:
             if max_length is not None:
                 content = content[:max_length]
             outbound = OutboundMessage(content=content, reference=reference)
-            send_cmd = SendMessageCommand(channel_id=str(channel_id), message=outbound, session_id=sid_key)
-            await bus.execute(send_cmd)
+            try:
+                await self._api.send_message(str(channel_id), outbound)
+            except Exception:
+                pass
 
         if hasattr(bus, "unregister_session_handlers"):
             bus.unregister_session_handlers(sid_key)  # type: ignore[attr-defined]

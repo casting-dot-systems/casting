@@ -123,3 +123,4 @@ class SessionManager:
             return view.value or ""
 
         return False
+
