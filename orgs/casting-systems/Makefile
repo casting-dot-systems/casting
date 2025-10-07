@@ -13,5 +13,5 @@ migrate-down:
 dbt-build:
 	uv run dbt build --profiles-dir sql
 
-discord-bot:
-	uv run --project apps/discord-bot casting-org-discord-bot
+casting-query-bot:
+	uv run --project apps/casting-query-bot casting-org-casting-query-bot

@@ -1,62 +1,23 @@
 [project]
-name = "casting-workspace"
+name = "casting-monorepo"
 version = "0.0.1"
 description = "Workspace root for Casting monorepo"
 dependencies = [
-    "discord-py>=2.6.3",
 ]
-
-# Do not install the root into the venv.
-[tool.uv]
-package = false
-default-groups = ["dev"]
 
 [tool.uv.workspace]
 members = [
     "llmgine",
-    "apps/discord-bot",
+    "apps/casting-query-bot",
     "libs/cast/query",
     "libs/discord/framework",
     "libs/platform/config",
+    "apps/cast/cli",
+    "apps/cast/tui",
+    "libs/cast/core",
+    "libs/cast/sync"
 ]
 exclude = [
-]
-
-# Workspace-wide mapping: when a member depends on these names,
-# satisfy them from the workspace (editable).
-[tool.uv.sources]
-llmgine = { workspace = true }
-casting-discord-framework = { workspace = true }
-cast-query = { workspace = true }
-discord-bot = { workspace = true }
-casting-config = { workspace = true }
-
-
-[dependency-groups]
-cast-query = [
-    "chromadb>=1.1.0",
-    "litellm>=1.77.4",
-]
-dev = [
-  "pytest>=8.3.0",
-  "pytest-asyncio>=0.23",
-  "ruff>=0.8.0",
-  "pyright>=1.1.390",
-  "mypy>=1.10",
-  "types-requests",
-  "httpx>=0.27",
-  "poethepoet>=0.31.0",
-  "ruamel.yaml>=0.18.0",
-  "typer>=0.12.0"
-]
-migrate = [
-  "alembic>=1.13",
-  "psycopg[binary]>=3.1"
-]
-pipeline = [
-  "dbt-core>=1.8",
-  "dbt-postgres>=1.8",
-  "sqlfluff>=3.0"
 ]
 
 [tool.ruff]

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from casting.platform.config import bootstrap_env, find_app_dir
-from casting.apps.discord_bot.__main__ import main as upstream_main
+from casting.apps.casting_query_bot.__main__ import main as upstream_main
 
 def main() -> None:
     """Launch the shared Discord bot with org-specific overrides."""

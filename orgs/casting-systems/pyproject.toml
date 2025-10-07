@@ -4,9 +4,6 @@ version = "0.1.0"
 description = "Org-specific extensions for casting systems"
 requires-python = ">=3.13"
 dependencies = [
-    "casting-discord-framework",
-    "cast-query",
-    "casting-config",
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "typer>=0.12",
@@ -34,13 +31,6 @@ pipeline = [
     "dbt-postgres>=1.8",
     "sqlfluff>=3.0"
 ]
-
-[tool.uv.sources]
-cast-query = { path = "../../libs/cast/query", editable = true }
-casting-discord-framework = { path = "../../libs/discord/framework", editable = true }
-discord-bot = { path = "../../apps/discord-bot", editable = true }
-llmgine = { path = "../../llmgine", editable = true }
-casting-config = { path = "../../libs/platform/config", editable = true }
 
 [project.scripts]
 casting-org = "casting_org.cli:app"

@@ -4,14 +4,17 @@ version = "0.1.0"
 description = "Casting Systems org wrapper around the shared Discord bot"
 requires-python = ">=3.13"
 dependencies = [
-    "discord-bot",
+    "casting-query-bot",
+    "org-rules",
 ]
 
 [tool.uv.sources]
-discord-bot = { path = "../../../../apps/discord-bot", editable = true }
+casting-query-bot = { path = "../../../../apps/casting-query-bot", editable = true }
+org-rules = { workspace = true }
 
 [project.scripts]
 dev = "casting_systems.apps.amber:main"
+main = "casting_systems.apps.amber:main"
 
 [build-system]
 requires = ["uv_build>=0.8.22,<0.9.0"]

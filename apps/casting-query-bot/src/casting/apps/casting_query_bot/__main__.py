@@ -5,7 +5,7 @@ from casting.platform.config import bootstrap_env, find_app_dir
 from casting.discord.framework.discord_adapter import DiscordBotApp, DiscordConfig
 from casting.discord.framework.discord_adapter.session_manager import SessionManager
 
-from casting.apps.discord_bot.engine_bridge import DarcyEngineBridge
+from casting.apps.casting_query_bot.engine_bridge import DarcyEngineBridge
 
 def _engine_factory(sessions: SessionManager) -> DarcyEngineBridge:
     return DarcyEngineBridge(sessions)

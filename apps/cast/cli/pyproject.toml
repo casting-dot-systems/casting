@@ -14,7 +14,8 @@ dependencies = [
     "prompt-toolkit>=3.0.43",
     "google-api-python-client>=2.131.0",
     "google-auth>=2.30.0",
-    "google-auth-oauthlib>=1.2.0"
+    "google-auth-oauthlib>=1.2.0",
+    "openai==2.0.0"
 ]
 
 [project.scripts]
@@ -24,6 +25,7 @@ cast = "casting.apps.cast.cli.cli:app"
 cast-core = { workspace = true }
 cast-sync = { workspace = true }
 cast-tui = { workspace = true }
+casting-config = { workspace = true }
 
 [project.optional-dependencies]
 dev = [
