@@ -1,6 +1,0 @@
-apiVersion: v2
-name: agent-hub
-description: Helm chart for the casting org agent hub
-type: application
-version: 0.1.0
-appVersion: "0.1.0"
