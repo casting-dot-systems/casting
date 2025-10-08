@@ -1,5 +1,5 @@
 [project]
-name = "casting-org-rules"
+name = "org-rules"
 version = "0.1.0"
 description = "Organization-specific governance rules"
 requires-python = ">=3.13"

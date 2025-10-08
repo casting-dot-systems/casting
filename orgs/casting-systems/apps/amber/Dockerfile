@@ -1,11 +1,11 @@
-FROM python:3.13.1-slim-bookworm
+FROM python:3.13-slim
 
-ENV PYTHONUNBUFFERED=True
 WORKDIR /workspace
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/
-
 COPY . /workspace
-RUN uv sync --no-sources --source org-rules --package=amber-bot
 
-CMD ["uv", "run", "--package", "amber-bot", "dev"]
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+RUN uv sync --no-sources --package=amber-bot
+
+CMD ["uv", "run", "--no-sources", "--package", "amber-bot", "prod"]

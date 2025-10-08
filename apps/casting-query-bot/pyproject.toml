@@ -1,6 +1,6 @@
 [project]
 name = "casting-query-bot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Darcy Discord bot application"
 requires-python = ">=3.13"
 dependencies = [
@@ -8,8 +8,7 @@ dependencies = [
     "casting-discord-framework",
     "casting-config",
     "llmgine",
-    "litellm",
-    "openai==1.80.0"
+    "litellm"
 ]
 
 [dependency-groups]

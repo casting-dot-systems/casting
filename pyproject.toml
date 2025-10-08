@@ -2,7 +2,16 @@
 name = "casting-monorepo"
 version = "0.0.1"
 description = "Workspace root for Casting monorepo"
-dependencies = [
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.6",
+    "dagger-io>=0.19.1",
+    "pydantic-settings>=2.11.0",
+    "pytest>=8.4.2",
+    "python-dotenv>=1.1.1",
+    "ruff>=0.13.3",
+    "twine>=6.2.0",
 ]
 
 [tool.uv.workspace]
@@ -20,6 +29,9 @@ members = [
 exclude = [
 ]
 
+[tool.uv.sources]
+llmgine = { path = "./llmgine", editable = true }
+
 [tool.ruff]
 target-version = "py313"
 line-length = 120
@@ -35,68 +47,22 @@ select = [
     "T100",
 ]
 
-[tool.ruff.lint.isort]
-known-first-party = ["casting", "casting_org"]
-
 [tool.pyright]
 include = [
     "apps",
     "libs",
-    "llmgine"
 ]
 exclude = [
     "**/__pycache__",
     "**/.venv",
     "**/node_modules",
-    "orgs"
+    "orgs",
+    "llmgine"
 ]
 venvPath = "."
 venv = ".venv"
 pythonVersion = "3.13"
-typeCheckingMode = "basic"
+typeCheckingMode = "strict"
 useLibraryCodeForTypes = true
 reportMissingImports = "warning"
 reportMissingTypeStubs = false
-
-[tool.pytest.ini_options]
-addopts = "--doctest-modules"
-markers = [
-    "live: requires external Discord environment",
-]
-
-[tool.poe.tasks]
-fmt = "ruff format"
-lint = "ruff check --fix"
-check = "pyright"
-
-# Test commands - run from root
-"test:cli" = "pytest apps/cast/cli/tests"
-"test:tui" = { shell = "cd apps/cast/tui && pytest $@" }
-"test:core" = { shell = "cd libs/cast/core && pytest $@" }
-"test:sync" = { shell = "cd libs/cast/sync && pytest $@" }
-"test:all" = [
-    { ref = "test:cli" },
-    { ref = "test:tui" },
-    { ref = "test:core" },
-    { ref = "test:sync" }
-]
-test = { ref = "test:all" }
-
-all = [
-    { ref = "fmt" },
-    { ref = "lint" },
-    { ref = "check" },
-    { ref = "test" },
-]
-
-# CI commands
-"ci:fmt" = "ruff format --check"
-"ci:lint" = "ruff check"
-"ci:check" = "pyright"
-"ci:test" = { ref = "test:all" }
-"ci:all" = [
-    { ref = "ci:fmt" },
-    { ref = "ci:lint" },
-    { ref = "ci:check" },
-    { ref = "ci:test" },
-]
